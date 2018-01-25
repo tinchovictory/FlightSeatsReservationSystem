@@ -3,10 +3,12 @@
 
 typedef struct Db * Db_t;
 
-typedef enum {DB_OK, DB_CONNERR} DbCode;
+typedef enum {DB_OK, DB_CONNERR, DB_INSTALLERR} DbCode;
 
 DbCode dbInit(Db_t * db);
 
 void dbClose(Db_t db);
+
+DbCode installDb(Db_t db);
 
 #endif

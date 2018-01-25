@@ -38,6 +38,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	closeSocket(socket);
+	dbClose(db);
 
  	return 0;
 }

@@ -31,3 +31,28 @@ DbCode dbInit(Db_t * dbPtr) {
 void dbClose(Db_t db) {
 	sqlite3_close(db->db);
 }
+
+DbCode installDb(Db_t db) {
+	int resp;
+	char * errMsg;
+
+	char *sql = "DROP TABLE IF EXISTS Reservations;"
+				"DROP TABLE IF EXISTS Flights;" 
+                "CREATE TABLE Flights(FlightNo INT PRIMARY KEY, Departure TEXT, Arrival TEXT, Price INT, Seats INT, Date TEXT);"
+                "CREATE TABLE Reservations(ReservationNo INT PRIMARY KEY, FlightNo INT, Name TEXT, State TEXT, Seat TEXT,"
+                "FOREIGN KEY (FlightNo) REFERENCES Flights (FlightNo) ON DELETE CASCADE ON UPDATE NO ACTION);";
+
+    resp = sqlite3_exec(db->db, sql, 0, 0, &errMsg);
+    
+    if (resp != SQLITE_OK ) {
+        
+        printf("SQL error: %s\n", errMsg);
+        
+        sqlite3_free(errMsg);
+        sqlite3_close(db->db);
+        
+        return DB_INSTALLERR;
+    } 
+
+    return DB_OK;
+}
