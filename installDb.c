@@ -16,6 +16,13 @@ int main(void) {
 	dbCode = installDb(db);
 	checkDbError(dbCode);
 
+	/*** TESTING ****/
+
+	dbCode = addFlight(db, 2, "Buenos Airesss", "JFK", 100, 50, "26/01/2018");
+	checkDbError(dbCode);
+
+	/*** END TESTING *****/
+
 	/* Close connection */
 	dbClose(db);
 
