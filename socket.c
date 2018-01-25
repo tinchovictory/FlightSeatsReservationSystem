@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "socket.h"
+#include "includes/socket.h"
 
 typedef struct Socket {
 	int socketFd, newSocketFd;
@@ -225,4 +225,12 @@ ResponseCode connectServer(Socket_t socket) {
 		return CONNERR;
 	}
 	return NOERR;
+}
+
+
+/*
+ *
+ */
+void closeSocket(Socket_t socket) {
+	close(socket->socketFd);
 }
