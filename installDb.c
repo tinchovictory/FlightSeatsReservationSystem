@@ -21,6 +21,28 @@ int main(void) {
 	dbCode = addFlight(db, 2, "Buenos Airesss", "JFK", 100, 50, "26/01/2018");
 	checkDbError(dbCode);
 
+	dbCode = addFlight(db, 105, "JFK", "Buenos Aires", 105, 50, "29/01/2018");
+	checkDbError(dbCode);
+
+	dbCode = printFlights(db);
+	checkDbError(dbCode);
+
+	dbCode = bookFlight(db, 105, "Martin Victory", "1A");
+	checkDbError(dbCode);
+
+	dbCode = bookFlight(db, 105, "Martin Victory", "1B");
+	checkDbError(dbCode);
+
+	dbCode = printReservations(db);
+	checkDbError(dbCode);
+
+	dbCode = cancelReservation(db, 2);
+	checkDbError(dbCode);
+
+	dbCode = printReservations(db);
+	checkDbError(dbCode);
+
+
 	/*** END TESTING *****/
 
 	/* Close connection */
@@ -34,6 +56,16 @@ int main(void) {
 
  void checkDbError(DbCode code) {
 	if(code == DB_OK) {
+		return;
+	}
+
+	if(code == FLIGHTNOERR) {
+		printf("The flight number is incorrect\n");
+		return;
+	}
+
+	if(code == SEATERR) {
+		printf("The seat is alrready taken\n");
 		return;
 	}
 

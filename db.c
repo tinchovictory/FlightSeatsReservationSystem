@@ -11,8 +11,12 @@ typedef struct Db {
 } Db;
 
 
-DbCode printFlights(Db_t db);//TESTING
 int printFlightsCallback(void *NotUsed, int argc, char **argv, char **azColName);//TESTING
+int printReservationsCallback(void *NotUsed, int argc, char **argv, char **azColName);//TESTING
+
+int checkFlightNo(Db_t db, int flightNo);
+int checkSeat(Db_t db, int flightNo, char * seat);
+DbCode insertReservation(Db_t db, int flightNo, char * name, char * seat);
 
 
 
@@ -44,8 +48,8 @@ DbCode installDb(Db_t db) {
 
 	char *sql = "DROP TABLE IF EXISTS Reservations;"
 				"DROP TABLE IF EXISTS Flights;" 
-                "CREATE TABLE Flights(FlightNo INT PRIMARY KEY, Departure TEXT, Arrival TEXT, Price INT, Seats INT, Date TEXT);"
-                "CREATE TABLE Reservations(ReservationNo INT PRIMARY KEY, FlightNo INT, Name TEXT, State TEXT, Seat TEXT,"
+                "CREATE TABLE Flights(FlightNo INTEGER PRIMARY KEY, Departure TEXT, Arrival TEXT, Price INTEGER, Seats INTEGER, Date TEXT);"
+                "CREATE TABLE Reservations(ReservationNo INTEGER PRIMARY KEY, FlightNo INTEGER, Name TEXT, State TEXT, Seat TEXT,"
                 "FOREIGN KEY (FlightNo) REFERENCES Flights (FlightNo) ON DELETE CASCADE ON UPDATE NO ACTION);";
 
 	resp = sqlite3_exec(db->db, sql, 0, 0, &errMsg);
@@ -101,16 +105,81 @@ DbCode removeFlight(Db_t db, int flightNo) {
 
 
 DbCode bookFlight(Db_t db, int flightNo, char * name, char * seat) {
-	/* ReservationNo autoincrement */
-	/* State active */
 
 	/* Check flightNo exist and seat is not occupied */
-	/* Insert reservation */
+	if(!checkFlightNo(db, flightNo)) {
+		return FLIGHTNOERR;
+	}
+	if(!checkSeat(db, flightNo, seat)) {
+		return SEATERR;
+	}
 
+	/* Insert reservation */
+	return insertReservation(db, flightNo, name, seat);
 }
 
-int checkFlightNo(int flightNo) {
-	
+/* Check if flightNo exists */
+int checkFlightNo(Db_t db, int flightNo) {
+	sqlite3_stmt * res;
+	int resp;
+
+	char * sql = sqlite3_mprintf("SELECT * FROM Flights WHERE FlightNo = %d;", flightNo);
+
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
+
+	if(resp != SQLITE_OK) {
+		return 0;
+	}
+
+	resp = sqlite3_step(res);
+
+	sqlite3_finalize(res);
+
+	if(resp == SQLITE_ROW) {
+		return 1;
+	}
+	return 0;
+}
+
+/* Check if the seat is available */
+int checkSeat(Db_t db, int flightNo, char * seat) {
+	sqlite3_stmt * res;
+	int resp;
+
+	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = %d AND Seat = '%q';", flightNo, seat);
+
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
+
+	if(resp != SQLITE_OK) {
+		return 0;
+	}
+
+	resp = sqlite3_step(res);
+
+	sqlite3_finalize(res);
+
+	if(resp == SQLITE_DONE) {
+		return 1;
+	}
+	return 0;
+}
+
+/**/
+DbCode insertReservation(Db_t db, int flightNo, char * name, char * seat) {
+	int resp;
+	char * sql = sqlite3_mprintf("INSERT INTO Reservations VALUES(NULL, %d, '%q', 'Active', '%q');", flightNo, name, seat);
+
+	resp = sqlite3_exec(db->db, sql, 0, 0, 0);
+
+	sqlite3_free(sql);
+    
+    if (resp != SQLITE_OK ) {    
+		sqlite3_close(db->db);
+
+		return DB_INSERTERR;
+	}
+
+	return DB_OK;
 }
 
 
@@ -155,6 +224,38 @@ DbCode printFlights(Db_t db) {
 }
 
 int printFlightsCallback(void *NotUsed, int argc, char **argv, char **azColName) {
+	int i;
+
+	NotUsed = 0;
+    
+    for (i = 0; i < argc; i++) {
+
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    
+    printf("\n");
+
+    return 0;
+}
+
+DbCode printReservations(Db_t db) {
+	int resp;
+	char * errMsg;
+
+	char * sql = "SELECT * FROM Reservations;";
+
+	resp = sqlite3_exec(db->db, sql, printReservationsCallback, 0, &errMsg);
+    
+    if (resp != SQLITE_OK ) {  
+    	printf("SQL error: %s\n", errMsg);      
+		sqlite3_close(db->db);
+		sqlite3_free(errMsg);
+
+		return DB_SELECTERR;
+	}
+}
+
+int printReservationsCallback(void *NotUsed, int argc, char **argv, char **azColName) {
 	int i;
 
 	NotUsed = 0;
