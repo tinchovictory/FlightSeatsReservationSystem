@@ -1,6 +1,8 @@
 #ifndef __DB_H__
 #define __DB_H__
 
+#include "list.h"
+
 typedef struct Db * Db_t;
 
 typedef enum {DB_OK, DB_CONNERR, DB_INSTALLERR, DB_INSERTERR, DB_SELECTERR, DB_DELETEERR, DB_UPDATEERR, FLIGHTNOERR, SEATERR} DbCode;
@@ -19,10 +21,13 @@ DbCode cancelReservation(Db_t db, int reservationNo);
 
 DbCode removeFlight(Db_t db, int flightNo);
 
+ListPtr getFlights(Db_t db);
 
+ListPtr getReservations(Db_t db, int flightNo);
 
-DbCode printFlights(Db_t db);//TESTING
-DbCode printReservations(Db_t db);//TESTING
+ListPtr getReservationsCancelled(Db_t db, int flightNo);
+
+ListPtr getFlightSeatsBooked(Db_t db, int flightNo);
 
 
 #endif

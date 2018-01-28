@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "sqlite/sqlite3.h"
 
 #include "includes/db.h"
+#include "includes/list.h"
+#include "includes/dbObj.h"
 
 
 
@@ -10,9 +13,6 @@ typedef struct Db {
 	sqlite3 * db;
 } Db;
 
-
-int printFlightsCallback(void *NotUsed, int argc, char **argv, char **azColName);//TESTING
-int printReservationsCallback(void *NotUsed, int argc, char **argv, char **azColName);//TESTING
 
 int checkFlightNo(Db_t db, int flightNo);
 int checkSeat(Db_t db, int flightNo, char * seat);
@@ -79,8 +79,6 @@ DbCode addFlight(Db_t db, int flightNo, char * departure, char * arrival, int pr
 
 		return DB_INSERTERR;
 	}
-
-	//printFlights(db);//TESTING
 
 	return DB_OK;
 }
@@ -200,72 +198,197 @@ DbCode cancelReservation(Db_t db, int reservationNo) {
 	return DB_OK;
 }
 
-
-
-
-
-
-/* TESTING */
-DbCode printFlights(Db_t db) {
+/*
+ *
+ */
+ListPtr getFlights(Db_t db) {
+	sqlite3_stmt * res;
 	int resp;
-	char * errMsg;
+	ListPtr list;
+	const char * str;
 
-	char * sql = "SELECT * FROM Flights;";
+	char * sql = sqlite3_mprintf("SELECT * FROM Flights;");
 
-	resp = sqlite3_exec(db->db, sql, printFlightsCallback, 0, &errMsg);
-    
-    if (resp != SQLITE_OK ) {  
-    	printf("SQL error: %s\n", errMsg);      
-		sqlite3_close(db->db);
-		sqlite3_free(errMsg);
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
 
-		return DB_SELECTERR;
+	if(resp != SQLITE_OK) {
+		return NULL;
 	}
+
+	list = listInit(sizeof(FlightObj));
+
+	while((resp = sqlite3_step(res)) == SQLITE_ROW) {
+		FlightObj * flight = malloc(sizeof(FlightObj));
+
+		flight->flightNo = sqlite3_column_int(res, 0);
+
+		str = sqlite3_column_text(res,1);
+		flight->departure = malloc(strlen(str)+1);
+		strcpy(flight->departure, str);
+
+		str = sqlite3_column_text(res,2);
+		flight->arrival = malloc(strlen(str)+1);
+		strcpy(flight->arrival, str);
+
+		flight->price = sqlite3_column_int(res, 3);
+		flight->seats = sqlite3_column_int(res, 4);
+
+		str = sqlite3_column_text(res,5);
+		flight->date = malloc(strlen(str)+1);
+		strcpy(flight->date, str);		
+		
+		addToList(list, flight);
+	}
+
+	sqlite3_finalize(res);
+
+	if(resp == SQLITE_DONE) {
+		return list;
+	}
+
+	freeList(list);
+	return NULL;
 }
 
-int printFlightsCallback(void *NotUsed, int argc, char **argv, char **azColName) {
-	int i;
-
-	NotUsed = 0;
-    
-    for (i = 0; i < argc; i++) {
-
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    
-    printf("\n");
-
-    return 0;
-}
-
-DbCode printReservations(Db_t db) {
+/*
+ *
+ */
+ListPtr getReservations(Db_t db, int flightNo) {
+	sqlite3_stmt * res;
 	int resp;
-	char * errMsg;
+	ListPtr list;
+	const char * str;
 
-	char * sql = "SELECT * FROM Reservations;";
+	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = '%d' AND State = 'Active';", flightNo);
 
-	resp = sqlite3_exec(db->db, sql, printReservationsCallback, 0, &errMsg);
-    
-    if (resp != SQLITE_OK ) {  
-    	printf("SQL error: %s\n", errMsg);      
-		sqlite3_close(db->db);
-		sqlite3_free(errMsg);
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
 
-		return DB_SELECTERR;
+	if(resp != SQLITE_OK) {
+		return NULL;
 	}
+
+	list = listInit(sizeof(ReservationObj));
+
+	while((resp = sqlite3_step(res)) == SQLITE_ROW) {
+		ReservationObj * reservation = malloc(sizeof(ReservationObj));
+
+		reservation->reservationNo = sqlite3_column_int(res, 0);
+		reservation->flightNo = sqlite3_column_int(res, 1);
+
+		str = sqlite3_column_text(res,2);
+		reservation->name = malloc(strlen(str)+1);
+		strcpy(reservation->name, str);
+
+		str = sqlite3_column_text(res,3);
+		reservation->state = malloc(strlen(str)+1);
+		strcpy(reservation->state, str);
+
+		str = sqlite3_column_text(res,4);
+		reservation->seat = malloc(strlen(str)+1);
+		strcpy(reservation->seat, str);		
+		
+		addToList(list, reservation);
+	}
+
+	sqlite3_finalize(res);
+
+	if(resp == SQLITE_DONE) {
+		return list;
+	}
+
+	freeList(list);
+	return NULL;
 }
 
-int printReservationsCallback(void *NotUsed, int argc, char **argv, char **azColName) {
-	int i;
 
-	NotUsed = 0;
-    
-    for (i = 0; i < argc; i++) {
+/*
+ *
+ */
+ListPtr getReservationsCancelled(Db_t db, int flightNo) {
+	sqlite3_stmt * res;
+	int resp;
+	ListPtr list;
+	const char * str;
 
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    
-    printf("\n");
+	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = '%d' AND State = 'Canceled';", flightNo);
 
-    return 0;
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
+
+	if(resp != SQLITE_OK) {
+		return NULL;
+	}
+
+	list = listInit(sizeof(ReservationObj));
+
+	while((resp = sqlite3_step(res)) == SQLITE_ROW) {
+		ReservationObj * reservation = malloc(sizeof(ReservationObj));
+
+		reservation->reservationNo = sqlite3_column_int(res, 0);
+		reservation->flightNo = sqlite3_column_int(res, 1);
+
+		str = sqlite3_column_text(res,2);
+		reservation->name = malloc(strlen(str)+1);
+		strcpy(reservation->name, str);
+
+		str = sqlite3_column_text(res,3);
+		reservation->state = malloc(strlen(str)+1);
+		strcpy(reservation->state, str);
+
+		str = sqlite3_column_text(res,4);
+		reservation->seat = malloc(strlen(str)+1);
+		strcpy(reservation->seat, str);		
+		
+		addToList(list, reservation);
+	}
+
+	sqlite3_finalize(res);
+
+	if(resp == SQLITE_DONE) {
+		return list;
+	}
+
+	freeList(list);
+	return NULL;
+}
+
+
+/*
+ *
+ */
+ListPtr getFlightSeatsBooked(Db_t db, int flightNo) {
+	sqlite3_stmt * res;
+	int resp;
+	ListPtr list;
+	const char * str;
+
+	char * sql = sqlite3_mprintf("SELECT Seat FROM Reservations WHERE FlightNo = '%d' AND State = 'Active';", flightNo);
+
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
+
+	if(resp != SQLITE_OK) {
+		return NULL;
+	}
+
+	list = listInit(sizeof(FlightSeatObj));
+
+	while((resp = sqlite3_step(res)) == SQLITE_ROW) {
+		FlightSeatObj * flightSeat = malloc(sizeof(FlightSeatObj));
+
+		flightSeat->flightNo = flightNo;
+
+		str = sqlite3_column_text(res,0);
+		flightSeat->seat = malloc(strlen(str)+1);
+		strcpy(flightSeat->seat, str);
+
+		addToList(list, flightSeat);
+	}
+
+	sqlite3_finalize(res);
+
+	if(resp == SQLITE_DONE) {
+		return list;
+	}
+
+	freeList(list);
+	return NULL;
 }

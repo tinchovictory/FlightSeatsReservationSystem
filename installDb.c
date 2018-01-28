@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include "includes/db.h"
 
+//TESTING
+#include "includes/list.h"
+#include "includes/dbObj.h"
+void printReservations(Db_t db, int flightNo);
+void printSeats(Db_t db, int flightNo);
+
 void checkDbError(DbCode code);
 
 int main(void) {
@@ -24,8 +30,19 @@ int main(void) {
 	dbCode = addFlight(db, 105, "JFK", "Buenos Aires", 105, 50, "29/01/2018");
 	checkDbError(dbCode);
 
-	dbCode = printFlights(db);
+	/*dbCode = printFlights(db);
 	checkDbError(dbCode);
+*/
+	ListPtr flightsList = getFlights(db);
+	ListIteratorPtr flightIterator = listIterator(flightsList);
+	FlightObj * flight = malloc(sizeof(FlightObj));
+	while(iteratorHasNext(flightIterator)) {
+		iteratorGetNext(flightIterator, flight);
+		printf("Flight: %d, from: %s, to: %s\n",flight->flightNo, flight->departure, flight->arrival);
+	}
+	freeIterator(flightIterator);
+	freeList(flightsList);
+
 
 	dbCode = bookFlight(db, 105, "Martin Victory", "1A");
 	checkDbError(dbCode);
@@ -33,14 +50,20 @@ int main(void) {
 	dbCode = bookFlight(db, 105, "Martin Victory", "1B");
 	checkDbError(dbCode);
 
-	dbCode = printReservations(db);
-	checkDbError(dbCode);
+printf("\n\n");
+printReservations(db, 105);
+
+
+printf("\n\n");
+printSeats(db, 105);
+
 
 	dbCode = cancelReservation(db, 2);
 	checkDbError(dbCode);
 
-	dbCode = printReservations(db);
-	checkDbError(dbCode);
+printf("\n\n");
+
+	printReservations(db, 105);
 
 
 	/*** END TESTING *****/
@@ -71,4 +94,30 @@ int main(void) {
 
 	printf("Db fail\n");
 	exit(1);
+}
+
+void printReservations(Db_t db, int flightNo) {
+	ListPtr reservationList = getReservations(db, flightNo);
+	ListIteratorPtr reservationIterator = listIterator(reservationList);
+	ReservationObj * reservation = malloc(sizeof(ReservationObj));
+	while(iteratorHasNext(reservationIterator)) {
+		iteratorGetNext(reservationIterator, reservation);
+		printf("Reservation: %d, Flight: %d, Name: %s, Seat: %s\n", reservation->reservationNo, reservation->flightNo, reservation->name, reservation->seat);
+	}
+	free(reservation);
+	freeIterator(reservationIterator);
+	freeList(reservationList);
+}
+
+void printSeats(Db_t db, int flightNo) {
+	ListPtr seatList = getFlightSeatsBooked(db, flightNo);
+	ListIteratorPtr seatIterator = listIterator(seatList);
+	FlightSeatObj * seat = malloc(sizeof(FlightSeatObj));
+	while(iteratorHasNext(seatIterator)) {
+		iteratorGetNext(seatIterator, seat);
+		printf("Flight: %d, Seat: %s\n", seat->flightNo, seat->seat);
+	}
+	free(seat);
+	freeIterator(seatIterator);
+	freeList(seatList);
 }
