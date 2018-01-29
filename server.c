@@ -3,14 +3,15 @@
 
 #include "includes/socket.h"
 #include "includes/db.h"
+#include "includes/serverRequestHandler.h"
 
-#define PORT 8000
+#define PORT 8001
 #define TRUE 1
 
 void checkError(ResponseCode code);
 void checkDbError(DbCode code);
-void handleNewConnection(Socket_t socket);
-void handleClientRequests(Socket_t socket);
+void handleNewConnection(Socket_t socket, Db_t db);
+//void handleClientRequests(Socket_t socket);
 
 int main(int argc, char * argv[]) {
 	printf("\r Working\n");
@@ -34,7 +35,7 @@ int main(int argc, char * argv[]) {
 		checkError(resp);
 
 		/* Fork process */
-		handleNewConnection(socket);
+		handleNewConnection(socket, db);
 	}
 
 	closeSocket(socket);
@@ -63,7 +64,7 @@ void checkDbError(DbCode code) {
 	exit(1);
 }
 
-void handleNewConnection(Socket_t socket) {
+void handleNewConnection(Socket_t socket, Db_t db) {
 
 	printf("*** New connection established ***\n");
 	
@@ -72,7 +73,10 @@ void handleNewConnection(Socket_t socket) {
 	if(childPid == 0) {
 		/* Code for child process */
 
-		handleClientRequests(socket);
+		handleRequests(socket, db);
+
+		/* End socket */
+ 		closeCommunicationSocket(socket);
 
 		printf("*** Connection closed ***\n");
 		exit(0);
@@ -85,12 +89,13 @@ void handleNewConnection(Socket_t socket) {
 	}
 }
 
+/*
 void handleClientRequests(Socket_t socket) {
 
 
 
 
-/***** TESTING *****/
+/***** TESTING *****//*
 
 int n;
 char msg[1000] = {0};
@@ -108,12 +113,8 @@ while(1)
     printf("Receive and set:%s\n",msg);
    }
 
-/********* END TESTING *************/
+/********* END TESTING *************//*
 
 
-
-
-
-	/* End socket */
- 	closeCommunicationSocket(socket);
-}
+	
+}*/

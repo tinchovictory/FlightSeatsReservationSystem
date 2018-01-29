@@ -4,9 +4,6 @@
 #include "sqlite/sqlite3.h"
 
 #include "includes/db.h"
-#include "includes/list.h"
-#include "includes/dbObj.h"
-
 
 
 typedef struct Db {
@@ -16,7 +13,7 @@ typedef struct Db {
 
 int checkFlightNo(Db_t db, int flightNo);
 int checkSeat(Db_t db, int flightNo, char * seat);
-DbCode insertReservation(Db_t db, int flightNo, char * name, char * seat);
+DbCode insertReservation(Db_t db, ReservationObj * reserv);
 
 
 
@@ -66,9 +63,9 @@ DbCode installDb(Db_t db) {
 }
 
 
-DbCode addFlight(Db_t db, int flightNo, char * departure, char * arrival, int price, int seats, char * date) {
+DbCode addFlight(Db_t db, FlightObj * flight) {
 	int resp;
-	char * sql = sqlite3_mprintf("INSERT INTO Flights VALUES(%d, '%q', '%q', %d, %d, '%q');", flightNo, departure, arrival, price, seats, date);
+	char * sql = sqlite3_mprintf("INSERT INTO Flights VALUES(%d, '%q', '%q', %d, %d, '%q');", flight->flightNo, flight->departure, flight->arrival, flight->price, flight->seats, flight->date);
 
 	resp = sqlite3_exec(db->db, sql, 0, 0, 0);
 
@@ -102,18 +99,18 @@ DbCode removeFlight(Db_t db, int flightNo) {
 }
 
 
-DbCode bookFlight(Db_t db, int flightNo, char * name, char * seat) {
+DbCode bookFlight(Db_t db, ReservationObj * reserv) {
 
 	/* Check flightNo exist and seat is not occupied */
-	if(!checkFlightNo(db, flightNo)) {
+	if(!checkFlightNo(db, reserv->flightNo)) {
 		return FLIGHTNOERR;
 	}
-	if(!checkSeat(db, flightNo, seat)) {
+	if(!checkSeat(db, reserv->flightNo, reserv->seat)) {
 		return SEATERR;
 	}
 
 	/* Insert reservation */
-	return insertReservation(db, flightNo, name, seat);
+	return insertReservation(db, reserv);
 }
 
 /* Check if flightNo exists */
@@ -163,9 +160,9 @@ int checkSeat(Db_t db, int flightNo, char * seat) {
 }
 
 /**/
-DbCode insertReservation(Db_t db, int flightNo, char * name, char * seat) {
+DbCode insertReservation(Db_t db, ReservationObj * reserv) {
 	int resp;
-	char * sql = sqlite3_mprintf("INSERT INTO Reservations VALUES(NULL, %d, '%q', 'Active', '%q');", flightNo, name, seat);
+	char * sql = sqlite3_mprintf("INSERT INTO Reservations VALUES(NULL, %d, '%q', 'Active', '%q');", reserv->flightNo, reserv->name, reserv->seat);
 
 	resp = sqlite3_exec(db->db, sql, 0, 0, 0);
 

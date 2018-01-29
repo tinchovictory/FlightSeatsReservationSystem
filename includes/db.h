@@ -2,6 +2,7 @@
 #define __DB_H__
 
 #include "list.h"
+#include "dbObj.h"
 
 typedef struct Db * Db_t;
 
@@ -13,9 +14,9 @@ void dbClose(Db_t db);
 
 DbCode installDb(Db_t db);
 
-DbCode addFlight(Db_t db, int flightNo, char * departure, char * arrival, int price, int seats, char * date);
+DbCode addFlight(Db_t db, FlightObj * flight);
 
-DbCode bookFlight(Db_t db, int flightNo, char * name, char * seat);
+DbCode bookFlight(Db_t db, ReservationObj * reserv);
 
 DbCode cancelReservation(Db_t db, int reservationNo);
 
