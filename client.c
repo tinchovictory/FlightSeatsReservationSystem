@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "includes/socket.h"
+#include "includes/gui.h"
 
 #define PORT 8000
 
@@ -22,11 +23,12 @@ int main(int argc, char * argv[]) {
 
 	printf("Connection established to server\n");
 
-
-	clientApp(socket);
+	menu();
+	// For testing sockets:  clientApp(socket);
 
 	return 0;
 }
+
 
 
 
@@ -38,7 +40,7 @@ void checkError(ResponseCode code) {
 		return;
 	}
 
-	printf("Fail\n");
+	printf("Failed to connect, please check if the server is working as expected!\n");
 	exit(1);
 }
 
