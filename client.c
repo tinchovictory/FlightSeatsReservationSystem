@@ -5,7 +5,9 @@
 #include "includes/socket.h"
 #include "includes/gui.h"
 
-#define PORT 8000
+#define PORT 8001
+
+int addToStr(char * ptr, char * str);//TESTING
 
 
 void checkError(ResponseCode code);
@@ -63,15 +65,45 @@ while(1)
   if(msg1[0]=='#')
    break;
 
-  n=strlen(msg1);
-  msg1[n-1] = 0;
-  sendMsg(socket,msg1,n);
+  //n=strlen(msg1);
+  //msg1[n-1] = 0;
+	char * ptr = msg1 +1;
+
+	memset(msg1, 0, 1000);
+	msg1[0] = '0';
+	ptr += 1 + addToStr(ptr, "125");
+	ptr += 1 + addToStr(ptr, "Buenos Aires");
+	ptr += 1 + addToStr(ptr, "JFK");
+	ptr += 1 + addToStr(ptr, "100");
+	ptr += 1 + addToStr(ptr, "50");
+	ptr += 1 + addToStr(ptr, "31/01/2018");
+
+/*
+int flightNo;
+	char * departure;
+	char * arrival;
+	int price;
+	int seats;
+	char * date;
+*/
+
+
+  sendMsg(socket,msg1,1000);
 
   n=recvMsg(socket,msg2,1000);
 
-  printf("Receive message from  server:%s\n",msg2);
+  printf("Receive message from  server:%s\n",msg2[0] == '0' ? "OK" : "ERR");
  }
 
 
 	/***** END TESTING*****/
+}
+
+int addToStr(char * ptr, char * str) {
+	int i = 0;
+	while(str[i]) {
+		ptr[i] = str[i];
+		i++;
+	}
+	return i;
 }
