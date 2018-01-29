@@ -13,8 +13,8 @@ void checkDbError(DbCode code);
 void handleNewConnection(Socket_t socket, Db_t db);
 //void handleClientRequests(Socket_t socket);
 
-
 int main(int argc, char * argv[]) {
+	printf("\r Working\n");
 
 	Socket_t socket;
 	ResponseCode resp;
