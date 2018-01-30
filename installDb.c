@@ -22,7 +22,19 @@ int main(void) {
 	dbCode = installDb(db);
 	checkDbError(dbCode);
 
-	/*** TESTING ****//*
+	/*** TESTING ****/
+
+	FlightObj * flight = malloc(sizeof(FlightObj));
+	flight->flightNo = 1010;
+	flight->departure = "New York";
+	flight->arrival = "London";
+	flight->price = 1000;
+	flight->seats = 50;
+	flight->date = "31/01/2018";
+
+	addFlight(db, flight);
+
+	/*
 
 	dbCode = addFlight(db, 2, "Buenos Airesss", "JFK", 100, 50, "26/01/2018");
 	checkDbError(dbCode);

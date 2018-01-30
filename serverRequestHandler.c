@@ -6,6 +6,7 @@
 #include "includes/protocol.h"
 #include "includes/dbObj.h"
 #include "includes/list.h"
+#include "includes/stringUtils.h"
 
 TransactionResponse processRequest(Socket_t socket, Db_t db, char * buff);
 TransactionResponse processAddFlight(Db_t db, char * buff);
@@ -21,9 +22,6 @@ void sendReservation(Socket_t socket, ReservationObj * reserv);
 void sendSeat(Socket_t socket, FlightSeatObj * seat);
 void answerRequest(Socket_t socket, TransactionResponse resp);
 int transWaitNext(Socket_t socket);
-int strToInt(char * buff);
-char * intToStr(int val, char * buff);
-int addToStr(char * ptr, char * str);
 
 
 void handleRequests(Socket_t socket, Db_t db) {
@@ -176,10 +174,8 @@ TransactionResponse processGetFlights(Socket_t socket, Db_t db) {
 	answerRequest(socket, TRANS_BEGIN);
 
 	while(transWaitNext(socket) && iteratorHasNext(flightsIter)) {
-
 		iteratorGetNext(flightsIter, flight);
 		sendFlight(socket, flight);
-
 	}
 	free(flight);
 	freeIterator(flightsIter);
@@ -204,11 +200,10 @@ TransactionResponse processGetReservations(Socket_t socket, Db_t db, char * buff
 	answerRequest(socket, TRANS_BEGIN);
 
 	while(transWaitNext(socket) && iteratorHasNext(reservIter)) {
-
 		iteratorGetNext(reservIter, reserv);
 		sendReservation(socket, reserv);
-
 	}
+	
 	free(reserv);
 	freeIterator(reservIter);
 	freeList(reservList);
@@ -278,7 +273,7 @@ int transWaitNext(Socket_t socket) {
 	if(recvMsg(socket, buff, TRANSACTION_SIZE) <= 0) {
 		return 0;
 	}
-	if(buff[0] != TRANS_NEXT) {
+	if(buff[0] - '0' != TRANS_NEXT) {
 		return 0;
 	}
 	return 1;
@@ -291,7 +286,7 @@ void sendFlight(Socket_t socket, FlightObj * flight) {
 	char * ptr = buff;
 	char intBuff[5] = {0};
 
-	ptr += 1 + addToStr(ptr, intToStr(TRANS_RESP, intBuff));
+	ptr +=  addToStr(ptr, intToStr(TRANS_RESP, intBuff));
 	ptr += 1 + addToStr(ptr, intToStr(flight->flightNo, intBuff));
 	ptr += 1 + addToStr(ptr, flight->departure);
 	ptr += 1 + addToStr(ptr, flight->arrival);
@@ -307,7 +302,7 @@ void sendReservation(Socket_t socket, ReservationObj * reserv) {
 	char * ptr = buff;
 	char intBuff[5] = {0};
 
-	ptr += 1 + addToStr(ptr, intToStr(TRANS_RESP, intBuff));
+	ptr += addToStr(ptr, intToStr(TRANS_RESP, intBuff));
 	ptr += 1 + addToStr(ptr, intToStr(reserv->reservationNo, intBuff));
 	ptr += 1 + addToStr(ptr, intToStr(reserv->flightNo, intBuff));
 	ptr += 1 + addToStr(ptr, reserv->name);
@@ -322,46 +317,9 @@ void sendSeat(Socket_t socket, FlightSeatObj * seat) {
 	char * ptr = buff;
 	char intBuff[MAX_NUM_SIZE] = {0};
 
-	ptr += 1 + addToStr(ptr, intToStr(TRANS_RESP, intBuff));
+	ptr += addToStr(ptr, intToStr(TRANS_RESP, intBuff));
 	ptr += 1 + addToStr(ptr, intToStr(seat->flightNo, intBuff));
 	ptr += 1 + addToStr(ptr, seat->seat);
 
 	sendMsg(socket,buff,TRANSACTION_SIZE);
-}
-
-int strToInt(char * buff) {
-	int i = 0;
-	while(*buff) {
-		i = i * 10 + (*buff - '0');
-		buff++;
-	}
-	return i;
-}
-
-char * intToStr(int val, char * buff) {
-	int aux[MAX_NUM_SIZE] = {0};
-	int i = 0, j = 0;
-	memset(buff, 0, MAX_NUM_SIZE);
-
-	while(val != 0) {
-		aux[i++] = val%10;
-		val /= 10;
-	}
-
-	for( ; i >= 0; i--) {
-		if(aux[i] != 0) {
-			buff[j++] = aux[i] + '0';
-		}
-	}
-
-	return buff;
-}
-
-int addToStr(char * ptr, char * str) {
-	int i = 0;
-	while(str[i]) {
-		ptr[i] = str[i];
-		i++;
-	}
-	return i;
 }

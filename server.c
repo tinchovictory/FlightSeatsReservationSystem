@@ -5,7 +5,7 @@
 #include "includes/db.h"
 #include "includes/serverRequestHandler.h"
 
-#define PORT 8001
+#define PORT 8000
 #define TRUE 1
 
 void checkError(ResponseCode code);
