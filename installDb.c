@@ -32,7 +32,7 @@ int main(void) {
 	flight->seats = 50;
 	flight->date = "31/01/2018";
 
-	addFlight(db, flight);
+	addFlightDb(db, flight);
 
 	/*
 
@@ -109,7 +109,7 @@ printf("\n\n");
 }
 
 void printReservations(Db_t db, int flightNo) {
-	ListPtr reservationList = getReservations(db, flightNo);
+	ListPtr reservationList = getReservationsDb(db, flightNo);
 	ListIteratorPtr reservationIterator = listIterator(reservationList);
 	ReservationObj * reservation = malloc(sizeof(ReservationObj));
 	while(iteratorHasNext(reservationIterator)) {
@@ -122,7 +122,7 @@ void printReservations(Db_t db, int flightNo) {
 }
 
 void printSeats(Db_t db, int flightNo) {
-	ListPtr seatList = getFlightSeatsBooked(db, flightNo);
+	ListPtr seatList = getFlightSeatsBookedDb(db, flightNo);
 	ListIteratorPtr seatIterator = listIterator(seatList);
 	FlightSeatObj * seat = malloc(sizeof(FlightSeatObj));
 	while(iteratorHasNext(seatIterator)) {

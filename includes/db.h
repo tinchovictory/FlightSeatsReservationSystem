@@ -14,21 +14,21 @@ void dbClose(Db_t db);
 
 DbCode installDb(Db_t db);
 
-DbCode addFlight(Db_t db, FlightObj * flight);
+DbCode addFlightDb(Db_t db, FlightObj * flight);
 
-DbCode bookFlight(Db_t db, ReservationObj * reserv);
+DbCode bookFlightDb(Db_t db, ReservationObj * reserv);
 
-DbCode cancelReservation(Db_t db, int reservationNo);
+DbCode cancelReservationDb(Db_t db, int reservationNo);
 
-DbCode removeFlight(Db_t db, int flightNo);
+DbCode removeFlightDb(Db_t db, int flightNo);
 
-ListPtr getFlights(Db_t db);
+ListPtr getFlightsDb(Db_t db);
 
-ListPtr getReservations(Db_t db, int flightNo);
+ListPtr getReservationsDb(Db_t db, int flightNo);
 
-ListPtr getReservationsCancelled(Db_t db, int flightNo);
+ListPtr getReservationsCancelledDb(Db_t db, int flightNo);
 
-ListPtr getFlightSeatsBooked(Db_t db, int flightNo);
+ListPtr getFlightSeatsBookedDb(Db_t db, int flightNo);
 
 
 #endif

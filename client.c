@@ -30,8 +30,8 @@ int main(int argc, char * argv[]) {
 
 	printf("Connection established to server\n");
 
-	menu();
-	// For testing sockets:  clientApp(socket);
+	app(socket);
+	 //clientApp(socket);
 
 	return 0;
 }

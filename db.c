@@ -63,25 +63,23 @@ DbCode installDb(Db_t db) {
 }
 
 
-DbCode addFlight(Db_t db, FlightObj * flight) {
+DbCode addFlightDb(Db_t db, FlightObj * flight) {
 	int resp;
 	char * sql = sqlite3_mprintf("INSERT INTO Flights VALUES(%d, '%q', '%q', %d, %d, '%q');", flight->flightNo, flight->departure, flight->arrival, flight->price, flight->seats, flight->date);
 
 	resp = sqlite3_exec(db->db, sql, 0, 0, 0);
 
 	sqlite3_free(sql);
-    
     if (resp != SQLITE_OK ) {    
 		sqlite3_close(db->db);
 
 		return DB_INSERTERR;
 	}
-
 	return DB_OK;
 }
 
 
-DbCode removeFlight(Db_t db, int flightNo) {
+DbCode removeFlightDb(Db_t db, int flightNo) {
 	int resp;
 	char * sql = sqlite3_mprintf("DELETE FROM Flights WHERE FlightNo = %d;", flightNo);
 
@@ -99,22 +97,9 @@ DbCode removeFlight(Db_t db, int flightNo) {
 }
 
 
-DbCode bookFlight(Db_t db, ReservationObj * reserv) {
-
-	/* Check flightNo exist and seat is not occupied */
-	if(!checkFlightNo(db, reserv->flightNo)) {
-		return FLIGHTNOERR;
-	}
-	if(!checkSeat(db, reserv->flightNo, reserv->seat)) {
-		return SEATERR;
-	}
-
-	/* Insert reservation */
-	return insertReservation(db, reserv);
-}
 
 /* Check if flightNo exists */
-int checkFlightNo(Db_t db, int flightNo) {
+int checkFlightNoDb(Db_t db, int flightNo) {
 	sqlite3_stmt * res;
 	int resp;
 
@@ -137,7 +122,7 @@ int checkFlightNo(Db_t db, int flightNo) {
 }
 
 /* Check if the seat is available */
-int checkSeat(Db_t db, int flightNo, char * seat) {
+int checkSeatDb(Db_t db, int flightNo, char * seat) {
 	sqlite3_stmt * res;
 	int resp;
 
@@ -160,7 +145,7 @@ int checkSeat(Db_t db, int flightNo, char * seat) {
 }
 
 /**/
-DbCode insertReservation(Db_t db, ReservationObj * reserv) {
+DbCode insertReservationDb(Db_t db, ReservationObj * reserv) {
 	int resp;
 	char * sql = sqlite3_mprintf("INSERT INTO Reservations VALUES(NULL, %d, '%q', 'Active', '%q');", reserv->flightNo, reserv->name, reserv->seat);
 
@@ -178,7 +163,20 @@ DbCode insertReservation(Db_t db, ReservationObj * reserv) {
 }
 
 
-DbCode cancelReservation(Db_t db, int reservationNo) {
+DbCode bookFlightDb(Db_t db, ReservationObj * reserv) {
+
+	/* Check flightNo exist and seat is not occupied */
+	if(!checkFlightNoDb(db, reserv->flightNo)) {
+		return FLIGHTNOERR;
+	}
+	if(!checkSeatDb(db, reserv->flightNo, reserv->seat)) {
+		return SEATERR;
+	}
+
+	/* Insert reservation */
+	return insertReservationDb(db, reserv);
+}
+DbCode cancelReservationDb(Db_t db, int reservationNo) {
 	int resp;
 	char * sql = sqlite3_mprintf("UPDATE Reservations SET State = 'Canceled' WHERE ReservationNo = %d;", reservationNo);
 
@@ -198,7 +196,8 @@ DbCode cancelReservation(Db_t db, int reservationNo) {
 /*
  *
  */
-ListPtr getFlights(Db_t db) {
+ListPtr getFlightsDb(Db_t db) {
+
 	sqlite3_stmt * res;
 	int resp;
 	ListPtr list;
@@ -206,19 +205,32 @@ ListPtr getFlights(Db_t db) {
 
 	char * sql = sqlite3_mprintf("SELECT * FROM Flights;");
 
-	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
+/*
+CODIGO DEL ADD
+resp = sqlite3_exec(db->db, sql, 0, 0, 0);
+
+	sqlite3_free(sql);
+    
+    if (resp != SQLITE_OK ) {    
+		sqlite3_close(db->db);
+
+		return DB_INSERTERR;
+	}
+	
+*/
+
+	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, NULL);
+
 
 	if(resp != SQLITE_OK) {
 		return NULL;
 	}
-
 	list = listInit(sizeof(FlightObj));
 
 	while((resp = sqlite3_step(res)) == SQLITE_ROW) {
 		FlightObj * flight = malloc(sizeof(FlightObj));
 
 		flight->flightNo = sqlite3_column_int(res, 0);
-
 		str = sqlite3_column_text(res,1);
 		flight->departure = malloc(strlen(str)+1);
 		strcpy(flight->departure, str);
@@ -250,7 +262,7 @@ ListPtr getFlights(Db_t db) {
 /*
  *
  */
-ListPtr getReservations(Db_t db, int flightNo) {
+ListPtr getReservationsDb(Db_t db, int flightNo) {
 	sqlite3_stmt * res;
 	int resp;
 	ListPtr list;
@@ -301,7 +313,7 @@ ListPtr getReservations(Db_t db, int flightNo) {
 /*
  *
  */
-ListPtr getReservationsCancelled(Db_t db, int flightNo) {
+ListPtr getReservationsCancelledDb(Db_t db, int flightNo) {
 	sqlite3_stmt * res;
 	int resp;
 	ListPtr list;
@@ -352,7 +364,7 @@ ListPtr getReservationsCancelled(Db_t db, int flightNo) {
 /*
  *
  */
-ListPtr getFlightSeatsBooked(Db_t db, int flightNo) {
+ListPtr getFlightSeatsBookedDb(Db_t db, int flightNo) {
 	sqlite3_stmt * res;
 	int resp;
 	ListPtr list;

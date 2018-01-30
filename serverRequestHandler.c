@@ -97,7 +97,7 @@ TransactionResponse processAddFlight(Db_t db, char * buff) {
 
 
 	/* Critical zone */
-	dbCode = addFlight(db, flight);
+	dbCode = addFlightDb(db, flight);
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -119,7 +119,7 @@ TransactionResponse processBookFlight(Db_t db, char * buff) {
 	reserv->seat = buff + offset;
 	
 	/* Critical zone */
-	dbCode = bookFlight(db, reserv);
+	dbCode = bookFlightDb(db, reserv);
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -134,7 +134,7 @@ TransactionResponse processDelFlight(Db_t db, char * buff) {
 	int flightNo = strToInt(buff);
 	
 	/* Critical zone */
-	dbCode = removeFlight(db, flightNo);
+	dbCode = removeFlightDb(db, flightNo);
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -149,7 +149,7 @@ TransactionResponse processCanReservation(Db_t db, char * buff) {
 	int reservationNo = strToInt(buff);
 	
 	/* Critical zone */
-	dbCode = cancelReservation(db, reservationNo);
+	dbCode = cancelReservationDb(db, reservationNo);
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -164,15 +164,13 @@ TransactionResponse processGetFlights(Socket_t socket, Db_t db) {
 	ListPtr flightsList;
 	ListIteratorPtr flightsIter;
 	FlightObj * flight;
-
 	/* Critical zone */
-	flightsList = getFlights(db);
-
+	flightsList = getFlightsDb(db);
 	flightsIter = listIterator(flightsList);
 	flight = malloc(sizeof(FlightObj));
+	iteratorGetNext(flightsIter, flight);
 
 	answerRequest(socket, TRANS_BEGIN);
-
 	while(transWaitNext(socket) && iteratorHasNext(flightsIter)) {
 		iteratorGetNext(flightsIter, flight);
 		sendFlight(socket, flight);
@@ -180,7 +178,6 @@ TransactionResponse processGetFlights(Socket_t socket, Db_t db) {
 	free(flight);
 	freeIterator(flightsIter);
 	freeList(flightsList);
-
 	return TRANS_OK;
 }
 
@@ -192,7 +189,7 @@ TransactionResponse processGetReservations(Socket_t socket, Db_t db, char * buff
 	ReservationObj * reserv;
 
 	/* Critical zone */
-	reservList = getReservations(db, strToInt(buff));
+	reservList = getReservationsDb(db, strToInt(buff));
 
 	reservIter = listIterator(reservList);
 	reserv = malloc(sizeof(ReservationObj));
@@ -218,7 +215,7 @@ TransactionResponse processGetCanReservations(Socket_t socket, Db_t db, char * b
 	ReservationObj * reserv;
 
 	/* Critical zone */
-	reservList = getReservationsCancelled(db, strToInt(buff));
+	reservList = getReservationsCancelledDb(db, strToInt(buff));
 
 	reservIter = listIterator(reservList);
 	reserv = malloc(sizeof(ReservationObj));
@@ -246,7 +243,7 @@ TransactionResponse processGetSeats(Socket_t socket, Db_t db, char * buff) {
 	FlightSeatObj * seat;
 
 	/* Critical zone */
-	seatsList = getFlightSeatsBooked(db, strToInt(buff));
+	seatsList = getFlightSeatsBookedDb(db, strToInt(buff));
 
 	seatsIter = listIterator(seatsList);
 	seat = malloc(sizeof(FlightSeatObj));

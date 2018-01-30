@@ -120,16 +120,15 @@ ListPtr getFlights(Socket_t socket) {
 	/* Ask for flights */
 	ptr += addToStr(ptr, intToStr(TRANS_GET_FLIGHTS, intBuff));
 	sendMsg(socket,buff,TRANSACTION_SIZE);
-
 	/* Wait confirmation */
 	memset(buff, 0, TRANSACTION_SIZE);
 	recvMsg(socket, buff, TRANSACTION_SIZE);
-
+	
 	if(buff[0] - '0' != TRANS_BEGIN) {
 		return NULL;
 	}
-
-	/* Transaction begin, save flights to the list */
+	
+/* Transaction begin, save flights to the list */
 	while(buff[0] - '0' == TRANS_BEGIN || buff[0] - '0' == TRANS_RESP) {
 		/* Ask for next */
 		memset(buff, 0, TRANSACTION_SIZE);
@@ -139,7 +138,6 @@ ListPtr getFlights(Socket_t socket) {
 		/* Get response */
 		memset(buff, 0, TRANSACTION_SIZE);
 		recvMsg(socket, buff, TRANSACTION_SIZE);
-
 		if(buff[0] - '0' == TRANS_RESP) {
 			FlightObj * flight = strToFlight(buff + 1);
 			addToList(list, strToFlight(buff + 1));
@@ -150,7 +148,6 @@ ListPtr getFlights(Socket_t socket) {
 		freeList(list);
 		return NULL;
 	}
-
 	return list;
 }
 

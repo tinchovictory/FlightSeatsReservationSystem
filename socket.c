@@ -6,7 +6,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 #include "includes/socket.h"
 
 typedef struct Socket {
