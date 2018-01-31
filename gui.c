@@ -6,7 +6,7 @@
 #include "includes/clientRequestBuilder.h"
 #include "includes/stringUtils.h"
 #define STRINGMAXLENGTH 30
-
+#define ROWQUANTITY 3
 //GUI
 
 static Socket_t  generalSocket;
@@ -36,6 +36,39 @@ void flow(){
 	}	
 }
 
+void printDAV(int flightNo){
+	ListPtr seatsList = getSeats(generalSocket, flightNo);
+	ListIteratorPtr iter = listIterator(seatsList);
+	FlightObj * flightData = getFlightObj(flightNo);
+	int quantity = flightData->seats, current = 0;
+	int planeSeats[quantity];
+	printf("- DAV for flight number %d | %d seats -\n", flightNo, flightData->seats);
+	while(iteratorHasNext(iter)){
+		FlightSeatObj * seat = malloc(sizeof(FlightSeatObj));
+		iteratorGetNext(iter, seat);
+		planeSeats[seat->seat-1] = 1;
+	}
+	while(current <= quantity){
+		for (int i = 0; i < ROWQUANTITY; ++i)
+		{
+			if(planeSeats[current] == 1)
+				printf("\033[0;31m [%d%s]",current, (current<10)?" ":"");
+			else
+				printf("\033[0;32m [%d%s]",current, (current<10)?" ":"");	
+			current++;
+		}
+		printf("   ");
+		for (int i = 0; i < ROWQUANTITY; ++i)
+		{
+			if(planeSeats[current] == 1)
+				printf("\033[0;31m [%d%s]",current, (current<10)?" ":"");
+			else
+				printf("\033[0;32m [%d%s]",current, (current<10)?" ":"");	
+			current++;
+		}
+		printf(" \n");
+	}
+}
 ListIteratorPtr getFlightsIterator(){
 	ListPtr flightsList = getFlights(generalSocket);
 	if(flightsList == NULL) {
@@ -106,7 +139,8 @@ void flightStatus(){
 
 	}
 	int flightNo = strToInt(input);
-	printf("%s\n", getFlightInfo(flightNo));	
+	printf("%s\n", getFlightInfo(flightNo));
+	printDAV(flightNo);	
 	free(flight);
 	
 	//IMPRIMIR PLANO DEL AVION CON LOS ASIENTOS LIBRES Y OCUPADOS
@@ -208,6 +242,7 @@ void removeReservation(){
 					iteratorGetNext(iter, reservation);
 					printf("- %d | %s | %s | %d \n", reservation->reservationNo, reservation->name, reservation->state, reservation->seat);
 				}
+				printDAV(flightNumberAsked);
 				printf("\033[0;32mNow, enter your reservation number\n\033[0m");
 				scanf("%d", &reservationNumberAsked);
 				break;
