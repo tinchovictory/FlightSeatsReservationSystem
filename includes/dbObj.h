@@ -15,12 +15,12 @@ typedef struct ReservationObj {
 	int flightNo;
 	char * name;
 	char * state;
-	char * seat;
+	int seat;
 } ReservationObj;
 
 typedef struct FlightSeatObj {
 	int flightNo;
-	char * seat;
+	int seat;
 } FlightSeatObj;
 
 #endif

@@ -12,7 +12,7 @@ typedef struct Db {
 
 
 int checkFlightNo(Db_t db, int flightNo);
-int checkSeat(Db_t db, int flightNo, char * seat);
+int checkSeat(Db_t db, int flightNo, int seat);
 DbCode insertReservation(Db_t db, ReservationObj * reserv);
 
 
@@ -46,7 +46,7 @@ DbCode installDb(Db_t db) {
 	char *sql = "DROP TABLE IF EXISTS Reservations;"
 				"DROP TABLE IF EXISTS Flights;" 
                 "CREATE TABLE Flights(FlightNo INTEGER PRIMARY KEY, Departure TEXT, Arrival TEXT, Price INTEGER, Seats INTEGER, Date TEXT);"
-                "CREATE TABLE Reservations(ReservationNo INTEGER PRIMARY KEY, FlightNo INTEGER, Name TEXT, State TEXT, Seat TEXT,"
+                "CREATE TABLE Reservations(ReservationNo INTEGER PRIMARY KEY, FlightNo INTEGER, Name TEXT, State TEXT, Seat INTEGER,"
                 "FOREIGN KEY (FlightNo) REFERENCES Flights (FlightNo) ON DELETE CASCADE ON UPDATE NO ACTION);";
 
 	resp = sqlite3_exec(db->db, sql, 0, 0, &errMsg);
@@ -122,11 +122,11 @@ int checkFlightNoDb(Db_t db, int flightNo) {
 }
 
 /* Check if the seat is available */
-int checkSeatDb(Db_t db, int flightNo, char * seat) {
+int checkSeatDb(Db_t db, int flightNo, int seat) {
 	sqlite3_stmt * res;
 	int resp;
 
-	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = %d AND Seat = '%q';", flightNo, seat);
+	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = %d AND Seat = %d;", flightNo, seat);
 
 	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
 
@@ -147,7 +147,7 @@ int checkSeatDb(Db_t db, int flightNo, char * seat) {
 /**/
 DbCode insertReservationDb(Db_t db, ReservationObj * reserv) {
 	int resp;
-	char * sql = sqlite3_mprintf("INSERT INTO Reservations VALUES(NULL, %d, '%q', 'Active', '%q');", reserv->flightNo, reserv->name, reserv->seat);
+	char * sql = sqlite3_mprintf("INSERT INTO Reservations VALUES(NULL, %d, '%q', 'Active', %d);", reserv->flightNo, reserv->name, reserv->seat);
 
 	resp = sqlite3_exec(db->db, sql, 0, 0, 0);
 
@@ -292,9 +292,7 @@ ListPtr getReservationsDb(Db_t db, int flightNo) {
 		reservation->state = malloc(strlen(str)+1);
 		strcpy(reservation->state, str);
 
-		str = sqlite3_column_text(res,4);
-		reservation->seat = malloc(strlen(str)+1);
-		strcpy(reservation->seat, str);		
+		reservation->seat = sqlite3_column_int(res, 4);		
 		
 		addToList(list, reservation);
 	}
@@ -343,9 +341,7 @@ ListPtr getReservationsCancelledDb(Db_t db, int flightNo) {
 		reservation->state = malloc(strlen(str)+1);
 		strcpy(reservation->state, str);
 
-		str = sqlite3_column_text(res,4);
-		reservation->seat = malloc(strlen(str)+1);
-		strcpy(reservation->seat, str);		
+		reservation->seat = sqlite3_column_int(res, 4);			
 		
 		addToList(list, reservation);
 	}
@@ -385,9 +381,7 @@ ListPtr getFlightSeatsBookedDb(Db_t db, int flightNo) {
 
 		flightSeat->flightNo = flightNo;
 
-		str = sqlite3_column_text(res,0);
-		flightSeat->seat = malloc(strlen(str)+1);
-		strcpy(flightSeat->seat, str);
+		flightSeat->seat = sqlite3_column_int(res, 0);
 
 		addToList(list, flightSeat);
 	}

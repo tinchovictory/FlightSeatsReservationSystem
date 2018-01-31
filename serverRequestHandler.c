@@ -116,7 +116,7 @@ TransactionResponse processBookFlight(Db_t db, char * buff) {
 	offset += strlen(buff + offset) + 1;
 	reserv->name = buff + offset;
 	offset += strlen(buff + offset) + 1;
-	reserv->seat = buff + offset;
+	reserv->seat = strToInt(buff + offset);
 	
 	/* Critical zone */
 	dbCode = bookFlightDb(db, reserv);
@@ -304,7 +304,7 @@ void sendReservation(Socket_t socket, ReservationObj * reserv) {
 	ptr += 1 + addToStr(ptr, intToStr(reserv->flightNo, intBuff));
 	ptr += 1 + addToStr(ptr, reserv->name);
 	ptr += 1 + addToStr(ptr, reserv->state);
-	ptr += 1 + addToStr(ptr, reserv->seat);
+	ptr += 1 + addToStr(ptr, intToStr(reserv->seat, intBuff));
 
 	sendMsg(socket,buff,TRANSACTION_SIZE);
 }
@@ -316,7 +316,7 @@ void sendSeat(Socket_t socket, FlightSeatObj * seat) {
 
 	ptr += addToStr(ptr, intToStr(TRANS_RESP, intBuff));
 	ptr += 1 + addToStr(ptr, intToStr(seat->flightNo, intBuff));
-	ptr += 1 + addToStr(ptr, seat->seat);
+	ptr += 1 + addToStr(ptr, intToStr(seat->seat, intBuff));
 
 	sendMsg(socket,buff,TRANSACTION_SIZE);
 }

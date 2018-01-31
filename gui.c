@@ -159,19 +159,22 @@ void manageflights(){
 
 
 void makeReservation(){
+	int flightNumberSelected, seat;
+	char * name = malloc(STRINGMAXLENGTH*sizeof(char)), * state = malloc(STRINGMAXLENGTH*sizeof(char));
+	ReservationObj * reservation;
+
 	printf("\033[0;32mPlease select a flight.\n\033[0m");
 	listFlights();
-	int flightNumberSelected;
+	
 	scanf("%d", &flightNumberSelected);
-	ReservationObj * reservation = malloc(sizeof(ReservationObj));
-	char * name = malloc(STRINGMAXLENGTH*sizeof(char)), * state = malloc(STRINGMAXLENGTH*sizeof(char)), * seat = malloc(STRINGMAXLENGTH*sizeof(char));
 	printf("\033[0;32mEnter name.\n\033[0m");
 	scanf("%s",name);
 	printf("\033[0;32mEnter state.\n\033[0m");
 	scanf("%s",state);
 	printf("\033[0;32mEnter seat.\n\033[0m");
-	scanf("%s",seat);
+	scanf("%d", &seat);
 
+	reservation = malloc(sizeof(ReservationObj));
 
 	reservation->reservationNo = RESERVATIONID++;
 	reservation->name = name;
@@ -203,7 +206,7 @@ void removeReservation(){
 				}
 				while(iteratorHasNext(iter)){
 					iteratorGetNext(iter, reservation);
-					printf("- %d | %s | %s | %s \n", reservation->reservationNo, reservation->name, reservation->state, reservation->seat);
+					printf("- %d | %s | %s | %d \n", reservation->reservationNo, reservation->name, reservation->state, reservation->seat);
 				}
 				printf("\033[0;32mNow, enter your reservation number\n\033[0m");
 				scanf("%d", &reservationNumberAsked);

@@ -107,7 +107,7 @@ printf("\n\n");
 	printf("Db fail\n");
 	exit(1);
 }
-
+/*
 void printReservations(Db_t db, int flightNo) {
 	ListPtr reservationList = getReservationsDb(db, flightNo);
 	ListIteratorPtr reservationIterator = listIterator(reservationList);
@@ -132,4 +132,4 @@ void printSeats(Db_t db, int flightNo) {
 	free(seat);
 	freeIterator(seatIterator);
 	freeList(seatList);
-}
+}*/

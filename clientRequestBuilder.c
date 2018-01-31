@@ -47,7 +47,7 @@ int bookFlight(Socket_t socket, ReservationObj * reserv) {
 	ptr += addToStr(ptr, intToStr(TRANS_BOOK_FLIGHT, intBuff));
 	ptr += 1 + addToStr(ptr, intToStr(reserv->flightNo, intBuff));
 	ptr += 1 + addToStr(ptr, reserv->name);
-	ptr += 1 + addToStr(ptr, reserv->seat);
+	ptr += 1 + addToStr(ptr, intToStr(reserv->seat, intBuff));
 
 	sendMsg(socket,buff,TRANSACTION_SIZE);
 
@@ -128,7 +128,7 @@ ListPtr getFlights(Socket_t socket) {
 		return NULL;
 	}
 	
-/* Transaction begin, save flights to the list */
+	/* Transaction begin, save flights to the list */
 	while(buff[0] - '0' == TRANS_BEGIN || buff[0] - '0' == TRANS_RESP) {
 		/* Ask for next */
 		memset(buff, 0, TRANSACTION_SIZE);
@@ -333,8 +333,7 @@ ReservationObj * strToReservation(char * buff) {
 	strcpy(reserv->state, buff + offset);
 	offset += strlen(buff + offset) + 1;
 
-	reserv->seat = malloc(strlen(buff + offset));
-	strcpy(reserv->seat, buff + offset);
+	reserv->seat = strToInt(buff + offset);
 
 	return reserv;
 }
@@ -346,8 +345,7 @@ FlightSeatObj * strToSeat(char * buff) {
 	seat->flightNo = strToInt(buff + offset);
 	offset += strlen(buff + offset) + 1;
 
-	seat->seat = malloc(strlen(buff + offset));
-	strcpy(seat->seat, buff + offset);
+	seat->seat = strToInt(buff + offset);
 	
 	return seat;
 }

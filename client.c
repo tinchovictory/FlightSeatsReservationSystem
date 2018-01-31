@@ -189,7 +189,7 @@ void printReservations(Socket_t socket, int flightNo) {
 	}
 	while(iteratorHasNext(iterator)) {
 		iteratorGetNext(iterator, reserv);
-		printf("Reservation: %d, Flight: %d, Name: %s, Seat: %s\n", reserv->reservationNo, reserv->flightNo, reserv->name, reserv->seat);
+		printf("Reservation: %d, Flight: %d, Name: %s, Seat: %d\n", reserv->reservationNo, reserv->flightNo, reserv->name, reserv->seat);
 	}
 	free(reserv);
 	freeIterator(iterator);
@@ -209,7 +209,7 @@ void printCanReservations(Socket_t socket, int flightNo) {
 	}
 	while(iteratorHasNext(iterator)) {
 		iteratorGetNext(iterator, reserv);
-		printf("Reservation: %d, Flight: %d, Name: %s, Seat: %s\n", reserv->reservationNo, reserv->flightNo, reserv->name, reserv->seat);
+		printf("Reservation: %d, Flight: %d, Name: %s, Seat: %d\n", reserv->reservationNo, reserv->flightNo, reserv->name, reserv->seat);
 	}
 	free(reserv);
 	freeIterator(iterator);
@@ -229,7 +229,7 @@ void printSeats(Socket_t socket, int flightNo) {
 	}
 	while(iteratorHasNext(iterator)) {
 		iteratorGetNext(iterator, seat);
-		printf("Flight: %d, Seat: %s\n", seat->flightNo, seat->seat);
+		printf("Flight: %d, Seat: %d\n", seat->flightNo, seat->seat);
 	}
 	free(seat);
 	freeIterator(iterator);
