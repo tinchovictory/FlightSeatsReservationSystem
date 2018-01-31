@@ -10,7 +10,7 @@
 //GUI
 
 static Socket_t  generalSocket;
-
+static int RESERVATIONID = 0;
 void app(Socket_t  socket){
 
 	generalSocket = socket;
@@ -20,7 +20,7 @@ void app(Socket_t  socket){
 }
 void flow(){
 	printf("\033[01;33mWelcome to the reservations system!\n");
-	printf("\033[0;33m (1) Flight Status\n (2) Make a reservation\n (3) Remove a reservation\n (4) Manage Flights\n (5) Exit\n");
+	printf("\033[1;35m (1) Flight Status\n (2) Make a reservation\n (3) Remove a reservation\n (4) Manage Flights\n (5) Exit\n\033[0m");
 	char selected = getchar(); 
 	switch(selected){
 		case '1': flightStatus();
@@ -77,23 +77,31 @@ FlightObj * getFlightObj(int flightNo){
 		return flight;
 	return NULL;		
 }
-
+void listFlights(){
+	ListIteratorPtr iter = getFlightsIterator();
+	FlightObj * flight = malloc(sizeof(FlightObj));
+	while(iteratorHasNext(iter)){
+		iteratorGetNext(iter, flight);
+		printf("- %d | %s ->  %s | %s | $ %d | %d seats \n",flight->flightNo, flight->departure, flight->arrival, flight->date,  flight->price,  flight->seats);
+	}
+	freeIterator(iter);
+}
 void flightStatus(){
 	ListIteratorPtr flightIterator = getFlightsIterator();
 	FlightObj * flight = malloc(sizeof(FlightObj));
 	char * input = malloc(5*sizeof(char));
 	
-	printf("\033[0;32mPlease enter the flight number or 'help' for getting the flights list.\n");
+	printf("\033[0;32mPlease enter the flight number or 'help' for getting the flights list.\n\033[0m");
 	scanf("%s", input);
 	
 	//Help section	
 	if(strcmp(input, "help") == 0){
 		while(iteratorHasNext(flightIterator)) {
 			iteratorGetNext(flightIterator, flight);
-			printf("- %d | %s ->  %s | %s \n",flight->flightNo, flight->departure, flight->arrival, flight->date);
+			printf("\033[0m- %d | %s ->  %s | %s \n",flight->flightNo, flight->departure, flight->arrival, flight->date);
 		}
 
-		printf("\033[0;32mNow, please enter the flight number.\n");
+		printf("\033[0;32mNow, please enter the flight number.\n\033[0m");
 		scanf("%s", input);
 
 	}
@@ -107,7 +115,7 @@ void flightStatus(){
 }
 
 void manageflights(){
-	printf(" (1) Add\n (2) Remove\n");
+	printf("\033[0;32m (1) Add\n (2) Remove\n\033[0m");
 	int selected;
 	scanf("%d", &selected);
 	printf("%d\n", selected);
@@ -116,50 +124,97 @@ void manageflights(){
 	char * dep = malloc(STRINGMAXLENGTH*sizeof(char)), * arr= malloc(STRINGMAXLENGTH*sizeof(char)), * date = malloc(STRINGMAXLENGTH*sizeof(char));
 	switch(selected){
 		case 1: 
-				printf("Insert new flight number\n");
+				printf("\033[0;32mInsert new flight number\n\033[0m");
 				scanf("%d", &object->flightNo);
-				printf("Insert new departure\n");
+				printf("\033[0;32mInsert new departure\n\033[0m");
 				scanf("%s", dep);
 				object->departure = dep;
-				printf("Insert new arrival\n");
+				printf("\033[0;32mInsert new arrival\n\033[0m");
 				scanf("%s", arr);
 				object->arrival = arr;
-				printf("Insert new price\n");
+				printf("\033[0;32mInsert new price\n\033[0m");
 				scanf("%d", &object->price);
-				printf("Insert new seats\n");
+				printf("\033[0;32mInsert new seats\n\033[0m");
 				scanf("%d", &object->seats);
-				printf("Insert new date\n");
+				printf("\033[0;32mInsert new date\n\033[0m");
 				scanf("%s", date);
 				object->date = date;
 				if(addFlight(generalSocket, object) ){
-					printf("Flight %d added\n", object->flightNo);
+					printf("\033[0;32mFlight %d added\n", object->flightNo);
 				} else {
-					printf("Fail to add.\n");
+					printf("\033[0;31mFail to add.\n");
 				}
 				break;
 		case 2: 
-				printf("\033[0;32mPlease enter the flight number.\n");
+				printf("\033[0;32mPlease enter the flight number.\n\033[0m");
 				scanf("%d", &flightNumberAsked);
 				printf("%s\n", getFlightInfo(flightNumberAsked));
 				if(getFlightObj(flightNumberAsked) == NULL) return;
 				deleteFlight(generalSocket, flightNumberAsked);
 				break;
 	}
-	printf("Done.\n");
+	printf("\033[0;32mDone.\n");
 	//flow();
 }
 
 
 void makeReservation(){
-	printf("\033[0;32m”Please select a flight.\n");
-	//Print Flights
+	printf("\033[0;32mPlease select a flight.\n\033[0m");
+	listFlights();
+	int flightNumberSelected;
+	scanf("%d", &flightNumberSelected);
+	ReservationObj * reservation = malloc(sizeof(ReservationObj));
+	char * name = malloc(STRINGMAXLENGTH*sizeof(char)), * state = malloc(STRINGMAXLENGTH*sizeof(char)), * seat = malloc(STRINGMAXLENGTH*sizeof(char));
+	printf("\033[0;32mEnter name.\n\033[0m");
+	scanf("%s",name);
+	printf("\033[0;32mEnter state.\n\033[0m");
+	scanf("%s",state);
+	printf("\033[0;32mEnter seat.\n\033[0m");
+	scanf("%s",seat);
+
+
+	reservation->reservationNo = RESERVATIONID++;
+	reservation->name = name;
+	reservation->flightNo = flightNumberSelected;
+	reservation->state = state;
+	reservation->seat = seat;
+	bookFlight(generalSocket, reservation);
+	printf("\033[0;32mDone.\n");
 }
 
 void removeReservation(){
-	int reservationNumberAsked;
-	printf("\033[0;32m”Please enter the reservation number.\n");
-	//scanf("%d", reservationNumberAsked);
-	//Remove Reservation
-
+	int selected, reservationNumberAsked, flightNumberAsked;
+	printf("\033[0;32mDo you know your reservation number?\n- (1) Yes\n- (2) No\n");
+	scanf("%d", &selected);		
+	switch(selected){
+		case 1:
+				printf("\033[0;32mPlease enter the reservation number.\n\033[0m");
+				scanf("%d", &reservationNumberAsked);
+				break;
+		case 2: 
+				printf("\033[0;32mEnter your Flight Number\n\033[0m");
+				scanf("%d", &flightNumberAsked);
+				ListPtr reservations = getReservations(generalSocket, flightNumberAsked);
+				ListIteratorPtr iter = listIterator(reservations);
+				ReservationObj * reservation = malloc(sizeof(ReservationObj));
+				if(!iteratorHasNext(iter)){
+					printf("\033[0;31mThere aren't reservations for this flight.\n");
+					return;
+				}
+				while(iteratorHasNext(iter)){
+					iteratorGetNext(iter, reservation);
+					printf("- %d | %s | %s | %s \n", reservation->reservationNo, reservation->name, reservation->state, reservation->seat);
+				}
+				printf("\033[0;32mNow, enter your reservation number\n\033[0m");
+				scanf("%d", &reservationNumberAsked);
+				break;
+		default:
+				printf("\033[0;31mWrong input.\n");
+				exit(0);
+				break;
+	}
+	cancelReservation(generalSocket, reservationNumberAsked);
+	printf("\033[0;32mDone.\n");
+	return;
 }
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <unistd.h>
 #include "includes/socket.h"
 #include "includes/db.h"
 #include "includes/serverRequestHandler.h"

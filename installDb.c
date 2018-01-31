@@ -83,7 +83,7 @@ printf("\n\n");
 	/* Close connection */
 	dbClose(db);
 
-
+	printf("\033[1;32m[Installed]\n");
 	return 0;
 
 }
