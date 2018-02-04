@@ -6,6 +6,7 @@
 #include "includes/list.h"
 #include "includes/clientRequestBuilder.h"
 
+int checkPureStr(char * buff, int buffSize);
 
 /* Check if there are any flights loaded in the db */
 int flightsLoaded(Socket_t socket) {
@@ -133,6 +134,10 @@ char * readString(char * buff, int buffSize) {
 		clearBuff();
 	}
 	
+	if(strcmp("quit", buff) == 0) {
+		return NULL;
+	}
+
 	return buff;
 }
 
@@ -141,10 +146,12 @@ int readInt() {
 	int done = 0, resp = 0;
 
 	while(!done) {
-		readString(buff, STRINGMAXLENGTH - 1);
+		if(readString(buff, STRINGMAXLENGTH - 1) == NULL) {
+			return -1;
+		}	
 		done = sscanf(buff, "%d", &resp);
 		if(!done) {
-			printf("\033[0;31m%s is not a number... Try again!\n\033[0m", buff);
+			printf("\n\033[0;31m%s is not a number... Try again! or 'quit'\n\033[0m", buff);
 		}
 	}
 
@@ -155,11 +162,35 @@ char * readAndCpyStr() {
 	char buff[STRINGMAXLENGTH] = {0};
 	char * resp;
 
-	readString(buff, STRINGMAXLENGTH -1);
+	if(readPureStr(buff, STRINGMAXLENGTH -1) == NULL) {
+		return NULL;
+	}
 	resp = calloc(strlen(buff) + 1, sizeof(char));
 	strcpy(resp, buff);
 
 	return resp;
+}
+
+int checkPureStr(char * buff, int buffSize) {
+	int i = 0;
+	while(i < buffSize && buff[i] != 0) {
+		if( (buff[i] < 'a' || buff[i] > 'z') && (buff[i] < 'A' || buff[i] > 'Z') && buff[i] != ' ' ){
+			return 0;
+		}
+		i++;
+	}
+	return 1;
+}
+
+char * readPureStr(char * buff, int buffSize) {
+	if(readString(buff, buffSize) == NULL) {
+		return NULL;
+	}
+	while(!checkPureStr(buff, buffSize)) {
+		printf("\n\033[0;31m%s is not a valid string... Try again! or 'quit'\n\033[0m", buff);
+		readString(buff, buffSize);
+	}
+	return buff;
 }
 
 char * readDate() {
@@ -168,7 +199,9 @@ char * readDate() {
 	int done = 0, day, month, year;
 
 	while(!done) {
-		readString(buff, STRINGMAXLENGTH - 1);
+		if(readString(buff, STRINGMAXLENGTH - 1) == NULL) {
+			return NULL;
+		}
 		done = sscanf(buff, "%d/%d/%d", &day, &month, &year);
 
 		if(done) {
@@ -176,7 +209,7 @@ char * readDate() {
 		}
 
 		if(!done ) {
-			printf("\033[0;31m%s is not a valid date... Try again!\n\033[0m", buff);
+			printf("\033[0;31m%s is not a valid date... Try again! or 'quit'\n\033[0m", buff);
 		}
 	}
 

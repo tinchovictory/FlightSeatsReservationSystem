@@ -1,12 +1,5 @@
 TODO
 
-opciones de cancel:
-	make reservation
-	remove reservation cuando te pide el numero de vuelo
-	manage flights
-	flight status
-	reservtions
-
 tablas lindas
 
 server info?

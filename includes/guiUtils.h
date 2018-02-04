@@ -24,6 +24,8 @@ char * readDate();
 
 int readIntHelp();
 
+char * readPureStr(char * buff, int buffSize);
+
 int isValidDate(int day, int month, int year);
 
 void clearBuff();
