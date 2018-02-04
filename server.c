@@ -6,6 +6,7 @@
 #include "includes/socket.h"
 #include "includes/db.h"
 #include "includes/serverRequestHandler.h"
+#include "includes/dbSincronization.h"
 
 #define TRUE 1
 
@@ -32,6 +33,9 @@ int main(int argc, char * argv[]) {
 	dbCode = dbInit(&db);
 	checkDbError(dbCode);
 
+	/* Initialize sincro */
+	sincroInit();
+
 	/* Wait for new client */
 	while(TRUE) {
 		resp = waitForClient(socket);
@@ -42,6 +46,7 @@ int main(int argc, char * argv[]) {
 
 	closeSocket(socket);
 	dbClose(db);
+	sincroDestroy();
 
  	return 0;
 }

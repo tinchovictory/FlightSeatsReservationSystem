@@ -7,6 +7,7 @@
 #include "includes/dbObj.h"
 #include "includes/list.h"
 #include "includes/stringUtils.h"
+#include "includes/dbSincronization.h"
 
 TransactionResponse processRequest(Socket_t socket, Db_t db, char * buff);
 TransactionResponse processAddFlight(Db_t db, char * buff);
@@ -96,7 +97,9 @@ TransactionResponse processAddFlight(Db_t db, char * buff) {
 	flight->date = buff + offset;
 
 	/* Critical zone */
+	startCritical();
 	dbCode = addFlightDb(db, flight);
+	endCritical();
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -118,7 +121,9 @@ TransactionResponse processBookFlight(Db_t db, char * buff) {
 	reserv->seat = strToInt(buff + offset);
 	
 	/* Critical zone */
+	startCritical();
 	dbCode = bookFlightDb(db, reserv);
+	endCritical();
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -133,7 +138,9 @@ TransactionResponse processDelFlight(Db_t db, char * buff) {
 	int flightNo = strToInt(buff);
 	
 	/* Critical zone */
+	startCritical();
 	dbCode = removeFlightDb(db, flightNo);
+	endCritical();
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -148,7 +155,9 @@ TransactionResponse processCanReservation(Db_t db, char * buff) {
 	int reservationNo = strToInt(buff);
 	
 	/* Critical zone */
+	startCritical();
 	dbCode = cancelReservationDb(db, reservationNo);
+	endCritical();
 
 	if(dbCode != DB_OK) {
 		return TRANS_ERR;
@@ -165,7 +174,9 @@ TransactionResponse processGetFlights(Socket_t socket, Db_t db) {
 	FlightObj * flight;
 
 	/* Critical zone */
+	startCritical();
 	flightsList = getFlightsDb(db);
+	endCritical();
 
 	if(flightsList == NULL) {
 		return TRANS_ERR;
@@ -193,7 +204,9 @@ TransactionResponse processGetReservations(Socket_t socket, Db_t db, char * buff
 	ReservationObj * reserv;
 
 	/* Critical zone */
+	startCritical();
 	reservList = getReservationsDb(db, strToInt(buff));
+	endCritical();
 
 	reservIter = listIterator(reservList);
 	reserv = malloc(sizeof(ReservationObj));
@@ -219,7 +232,9 @@ TransactionResponse processGetCanReservations(Socket_t socket, Db_t db, char * b
 	ReservationObj * reserv;
 
 	/* Critical zone */
+	startCritical();
 	reservList = getReservationsCancelledDb(db, strToInt(buff));
+	endCritical();
 
 	reservIter = listIterator(reservList);
 	reserv = malloc(sizeof(ReservationObj));
@@ -247,7 +262,9 @@ TransactionResponse processGetSeats(Socket_t socket, Db_t db, char * buff) {
 	FlightSeatObj * seat;
 
 	/* Critical zone */
+	startCritical();
 	seatsList = getFlightSeatsBookedDb(db, strToInt(buff));
+	endCritical();
 
 	seatsIter = listIterator(seatsList);
 	seat = malloc(sizeof(FlightSeatObj));

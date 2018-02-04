@@ -1,7 +1,5 @@
 TODO
 
-Mutex db
-
 Mejorar errores
 
 opciones de cancel:
@@ -14,3 +12,5 @@ remove reservation: check que hay vuelos
 manage flights: check que hay vuelos
 
 tablas lindas
+
+server info?
