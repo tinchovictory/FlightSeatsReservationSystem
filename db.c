@@ -205,22 +205,7 @@ ListPtr getFlightsDb(Db_t db) {
 
 	char * sql = sqlite3_mprintf("SELECT * FROM Flights;");
 
-/*
-CODIGO DEL ADD
-resp = sqlite3_exec(db->db, sql, 0, 0, 0);
-
-	sqlite3_free(sql);
-    
-    if (resp != SQLITE_OK ) {    
-		sqlite3_close(db->db);
-
-		return DB_INSERTERR;
-	}
-	
-*/
-
 	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, NULL);
-
 
 	if(resp != SQLITE_OK) {
 		return NULL;
@@ -317,7 +302,7 @@ ListPtr getReservationsCancelledDb(Db_t db, int flightNo) {
 	ListPtr list;
 	const char * str;
 
-	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = '%d' AND State = 'Canceled';", flightNo);
+	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = '%d';", flightNo);
 
 	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
 
@@ -366,7 +351,7 @@ ListPtr getFlightSeatsBookedDb(Db_t db, int flightNo) {
 	ListPtr list;
 	const char * str;
 
-	char * sql = sqlite3_mprintf("SELECT Seat FROM Reservations WHERE FlightNo = '%d' AND State = 'Active';", flightNo);
+	char * sql = sqlite3_mprintf("SELECT Seat FROM Reservations WHERE FlightNo = '%d' AND State = 'Active' ORDER BY Seat ASC;", flightNo);
 
 	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
 
