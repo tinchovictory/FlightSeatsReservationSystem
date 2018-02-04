@@ -3,7 +3,6 @@ TODO
 Mutex db
 
 Mejorar errores
-Port y server como parametro
 
 opciones de cancel:
 	remove reservation cuando te pide el numero de vuelo
@@ -11,10 +10,7 @@ opciones de cancel:
 	flight status
 	reservtions
 
-
 remove reservation: check que hay vuelos
 manage flights: check que hay vuelos
-
-it seems it already taken -> habria que imprimir el dav de nuevo
 
 tablas lindas

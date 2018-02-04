@@ -196,8 +196,12 @@ void makeReservation() {
 		printDAV(reserv->flightNo);
 		printf("\n\033[0;32mEnter seat.\n\033[0m");
 		reserv->seat = readInt();
+
 		/* Validate seat */
 		while((seatResp = checkSeat(reserv->flightNo, reserv->seat)) != SEAT_OK) {
+			if(seatResp == SEAT_TAKEN) {
+				printDAV(reserv->flightNo);
+			}
 			if(printSeatError(seatResp)) {
 				/* Fatal error */
 				free(reserv);

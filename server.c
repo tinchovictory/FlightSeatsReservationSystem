@@ -7,7 +7,6 @@
 #include "includes/db.h"
 #include "includes/serverRequestHandler.h"
 
-#define PORT 8000
 #define TRUE 1
 
 void checkError(ResponseCode code);
@@ -18,15 +17,15 @@ void * newThread(void * data);
 Db_t db;
 
 int main(int argc, char * argv[]) {
-	printf("\033[1;32m[Working]\033[0m\n");
-
 	Socket_t socket;
 	ResponseCode resp;
-	//Db_t db;
 	DbCode dbCode;
+	int port = validateParameters(argc, argv);
+
+	printf("\033[1;32m[Working on port %d]\033[0m\n", port);
 
 	/* Create server socket */
-	resp = serverInit(&socket, PORT);
+	resp = serverInit(&socket, port);
 	checkError(resp);
 
 	/* Create a db connection */
@@ -99,4 +98,18 @@ void * newThread(void * data) {
 
 	printf("\033[0;32m*** Connection closed ***\033[0m\n");
 	return 0;
+}
+
+int validateParameters(int argc, char * argv[]) {
+	int port;
+	if(argc != 2) {
+		printf("\n\033[0;31mInvalid parameters, usage: server <port>\033[0m\n");
+		exit(1);
+	}
+	
+	if(sscanf(argv[1], "%d", &port) == 0) {
+		printf("\n\033[0;31mParameter port should be an integer\033[0m\n");
+		exit(1);
+	}
+	return port;
 }
