@@ -22,8 +22,6 @@ int main(int argc, char * argv[]) {
 	resp = clientInit(&socket, "localhost", PORT);
 	checkError(resp);
 
-	printf("Connection established to server\n");
-
 	app(socket);
 
 	return 0;
@@ -40,6 +38,6 @@ void checkError(ResponseCode code) {
 		return;
 	}
 
-	printf("Failed to connect, please check if the server is working as expected!\n");
+	printf("\n\033[0;31mFailed to connect, please check if the server is working as expected!\n\033[0m");
 	exit(1);
 }

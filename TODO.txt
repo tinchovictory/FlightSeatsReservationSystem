@@ -15,12 +15,6 @@ opciones de cancel:
 remove reservation: check que hay vuelos
 manage flights: check que hay vuelos
 
-color install db
-color exit client
-
 it seems it already taken -> habria que imprimir el dav de nuevo
-
-mejorar errores server.c
-
 
 tablas lindas

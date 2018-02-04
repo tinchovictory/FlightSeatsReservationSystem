@@ -50,7 +50,7 @@ void app(Socket_t  socket) {
 void flow() {
 	int selected;
 
-	printf("\033[01;33m*** Welcome to the reservations system! ***\n");
+	printf("\n\n\033[01;33m*** Welcome to the reservations system! ***\033[0m\n");
 
 	printMenu();
 
@@ -72,13 +72,13 @@ void flow() {
 				manageflights();
 				break;
 			default:
-				printf("\n\033[0;31mInvalid option, please try again.\n");
+				printf("\n\033[0;31mInvalid option, please try again.\033[0m\n");
 				break;
 		}
 
 		printMenu();
 	}
-	printf("\n\033[01;33m*** Goodbye! ***\n\n");
+	printf("\n\033[01;33m*** Goodbye! ***\033[0m\n\n");
 }
 
 void printMenu() {
@@ -90,7 +90,7 @@ void flightStatus() {
 	int input;
 
 	if(!flightsLoaded()) {
-		printf("\n\033[0;31mThere are no flights loaded yet.\n");
+		printf("\n\033[0;31mThere are no flights loaded yet.\n\033[0m");
 		return;
 	}
 	
@@ -149,9 +149,9 @@ void manageflights() {
 		flight->date = readDate();
 
 		if(addFlight(generalSocket, flight)) {
-			printf("\n\033[0;32mFlight %d added\n", flight->flightNo);
+			printf("\n\033[0;32mFlight %d added\n\033[0m", flight->flightNo);
 		} else {
-			printf("\n\033[0;31mFail to add.\n");
+			printf("\n\033[0;31mFail to add.\n\033[0m");
 		}
 
 		free(flight);
@@ -162,7 +162,7 @@ void manageflights() {
 		flightNo = readInt();
 		printFlightInfo(flightNo);
 		deleteFlight(generalSocket, flightNo);
-		printf("\n\033[0;32mDone\n");
+		printf("\n\033[0;32mDone\n\033[0m");
 	}
 }
 
@@ -172,7 +172,7 @@ void makeReservation() {
 	int seatResp, done = 0;
 
 	if(!flightsLoaded()) {
-		printf("\n\033[0;31mThere are no flights loaded yet.\n");
+		printf("\n\033[0;31mThere are no flights loaded yet.\n\033[0m");
 		return;
 	}
 
@@ -216,7 +216,7 @@ void makeReservation() {
 			seatResp = checkSeat(reserv->flightNo, reserv->seat);
 			if(printSeatError(seatResp)) {
 				/* Fatal error, abort */
-				printf("\n\033[0;31mFailed to add.\n");
+				printf("\n\033[0;31mFailed to add.\n\033[0m");
 				free(reserv);
 				return;
 			}
@@ -235,7 +235,7 @@ void removeReservation() {
 	
 
 	do {
-		printf("\n\033[0;32mDo you know your reservation number?\n- (1) Yes\n- (2) No\n- (3) Cancel\n");	
+		printf("\n\033[0;32mDo you know your reservation number?\n- (1) Yes\n- (2) No\n- (3) Cancel\n\033[0m");	
 	} while((selectedMenu = readInt()) != 1 && selectedMenu != 2 && selectedMenu != 3);
 
 	if(selectedMenu == 3) {
@@ -263,7 +263,7 @@ void removeReservation() {
 	}
 
 	cancelReservation(generalSocket, reservNo);
-	printf("\n\033[0;32mDone\n");
+	printf("\n\033[0;32mDone\n\033[0m");
 
 }
 
@@ -308,17 +308,17 @@ void printFlights() {
 
 	list = getFlights(generalSocket);
 	if(list == NULL) {
-		printf("There are no flights loaded.\n");
+		printf("\033[0;31mThere are no flights loaded.\n\033[0m");
 		return;
 	}
 
 	flight = malloc(sizeof(FlightObj));
 	iter = listIterator(list);
 
-	printf("Flight No. | Departure -> Arrival | Date\n");
+	printf("\n\033[01;33mFlight No. | Departure -> Arrival | Date\n\033[0m");
 	while(iteratorHasNext(iter)) {
 		iteratorGetNext(iter, flight);
-		printf("\033[0m- %d | %s ->  %s | %s \n",flight->flightNo, flight->departure, flight->arrival, flight->date);
+		printf("\033[0m- %d | %s ->  %s | %s \n\033[0m",flight->flightNo, flight->departure, flight->arrival, flight->date);
 	}
 
 	free(flight);
@@ -331,10 +331,10 @@ void printFlightInfo(int flightNo) {
 	FlightObj * flight = getFlightObj(flightNo);
 
 	if(flight == NULL) {
-		printf("\033[0;31mFlight %d doesn't exist.\n", flightNo);
+		printf("\033[0;31mFlight %d doesn't exist.\n\033[0m", flightNo);
 		return;
 	}
-	printf("\033[0m- %d | %s ->  %s | %s \n",flight->flightNo, flight->departure, flight->arrival, flight->date);
+	printf("\n\033[01;33mFlight - %d | %s ->  %s | %s \n",flight->flightNo, flight->departure, flight->arrival, flight->date);
 	free(flight);
 }
 
@@ -447,7 +447,7 @@ void printDAV(int flightNo) {
 	iter = listIterator(seatsList);
 	seat = malloc(sizeof(FlightSeatObj));
 
-	printf("\n- DAV for flight %d | %d seats -\n", flightNo, flightData->seats);
+	printf("\n\033[01;33m--- DAV for flight %d | %d seats ---\n\033[0m", flightNo, flightData->seats);
 
 	for(i = 0; i < flightData->seats; i++) {
 		if(seatAdded && iteratorHasNext(iter)) {
@@ -462,10 +462,10 @@ void printDAV(int flightNo) {
 		}
 
 		if(!seatAdded && seat->seat == i+1) {
-			printf("\033[0;31m [%d%s]", i+1, (i+1 < 10) ? " " : "");
+			printf("\033[0;31m [%d%s]\033[0m", i+1, (i+1 < 10) ? " " : "");
 			seatAdded = 1;
 		} else {
-			printf("\033[0;32m [%d%s]", i+1, (i+1 < 10) ? " " : "");
+			printf("\033[0;32m [%d%s]\033[0m", i+1, (i+1 < 10) ? " " : "");
 		}
 	}	
 	printf("\n");
@@ -502,7 +502,7 @@ int readInt() {
 		readString(buff, STRINGMAXLENGTH - 1);
 		done = sscanf(buff, "%d", &resp);
 		if(!done) {
-			printf("%s is not a number... Try again!\n", buff);
+			printf("\033[0;31m%s is not a number... Try again!\n\033[0m", buff);
 		}
 	}
 
@@ -534,7 +534,7 @@ char * readDate() {
 		}
 
 		if(!done ) {
-			printf("%s is not a valid date... Try again!\n", buff);
+			printf("\033[0;31m%s is not a valid date... Try again!\n\033[0m", buff);
 		}
 	}
 
@@ -556,7 +556,7 @@ int readIntHelp() {
 			done = sscanf(buff, "%d", &resp);	
 		}
 		if(!done) {
-			printf("%s is not a number... Try again or press Help!\n", buff);
+			printf("\033[0;31m%s is not a number... Try again or press Help!\n\033[0m", buff);
 		}
 	}
 	return resp;
@@ -624,7 +624,7 @@ int printReservations(int flightNo) {
 	iter = listIterator(list);
 	reserv = malloc(sizeof(ReservationObj));
 
-	printf("Reservation No. | Name | State | Seat\n");
+	printf("\n\033[01;33mReservation No. | Name | State | Seat\n\033[0m");
 	while(iteratorHasNext(iter)) {
 		iteratorGetNext(iter, reserv);
 		printf("\033[0m- %d | %s |  %s | %d \n",reserv->reservationNo, reserv->name, reserv->state, reserv->seat);
@@ -658,11 +658,11 @@ void printAllReservations(int flightNo) {
 
 	reserv = malloc(sizeof(ReservationObj));
 
-	printf("Reservation No. | Name | State | Seat\n");
+	printf("\n\033[01;33mReservation No. | Name | State | Seat\n\033[0m");
 	while(iteratorHasNext(iter)) {
 		iteratorGetNext(iter, reserv);
 		if(strcmp(reserv->state, "Active") == 0) {
-			printf("\033[0;32m- %d | %s | %s | %d \n",reserv->reservationNo, reserv->name, reserv->state, reserv->seat);
+			printf("\033[0;32m- %d | %s | %s | %d \n\033[0m",reserv->reservationNo, reserv->name, reserv->state, reserv->seat);
 		} else {
 			printf("\033[0;31m- %d | %s | %s | %d \n\033[0m",reserv->reservationNo, reserv->name, reserv->state, reserv->seat);
 		}

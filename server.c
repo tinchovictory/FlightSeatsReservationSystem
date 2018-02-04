@@ -18,7 +18,7 @@ void * newThread(void * data);
 Db_t db;
 
 int main(int argc, char * argv[]) {
-	printf("\r Working\n");
+	printf("\033[1;32m[Working]\033[0m\n");
 
 	Socket_t socket;
 	ResponseCode resp;
@@ -54,7 +54,14 @@ void checkError(ResponseCode code) {
 		return;
 	}
 
-	printf("Fail\n");
+	if(code == SOCKERR) {
+		printf("\n\033[0;31mFatal error while creating socket.\033[0m\n");
+	} else if(code == BINDERR) {
+		printf("\n\033[0;31mFatal error while binding socket.\033[0m\n");
+	} else {
+		printf("\n\033[0;31mUnknown fatal error while initializing socket.\033[0m\n");
+	}
+	printf("\n\033[0;31mExiting...\033[0m\n");
 	exit(1);
 }
 
@@ -62,8 +69,12 @@ void checkDbError(DbCode code) {
 	if(code == DB_OK) {
 		return;
 	}
-
-	printf("Db fail\n");
+	if(code == DB_CONNERR) {
+		printf("\n\033[0;31mFatal error while connecting to the data base.\033[0m\n");
+	} else {
+		printf("\n\033[0;31mUnknown fatal error while connecting to the data base.\033[0m\n");
+	}
+	printf("\n\033[0;31mExiting...\033[0m\n");
 	exit(1);
 }
 
@@ -74,7 +85,7 @@ void handleNewConnection(Socket_t socket) {
 
 	if(pthread_create(&thread, NULL, newThread, newSocket) == 0) {
 		pthread_detach(thread);
-		printf("*** New connection established ***\n");
+		printf("\033[0;32m*** New connection established ***\033[0m\n");
 	}
 }
 
@@ -86,6 +97,6 @@ void * newThread(void * data) {
 	/* End socket */
 	closeCommunicationSocket(socket);
 
-	printf("*** Connection closed ***\n");
+	printf("\033[0;32m*** Connection closed ***\033[0m\n");
 	return 0;
 }

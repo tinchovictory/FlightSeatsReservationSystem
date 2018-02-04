@@ -19,7 +19,7 @@ int main(void) {
 	/* Close connection */
 	dbClose(db);
 
-	printf("\033[1;32m[Installed]\n");
+	printf("\033[1;32m[Installed]\033[0m\n");
 	return 0;
 
 }
@@ -29,7 +29,11 @@ int main(void) {
 	if(code == DB_OK) {
 		return;
 	}
-
-	printf("Db fail\n");
+	if(code == DB_CONNERR) {
+		printf("\n\033[0;31mFatal error while connecting to the data base.\033[0m\n");
+	} else {
+		printf("\n\033[0;31mUnknown fatal error while connecting to the data base.\033[0m\n");
+	}
+	printf("\n\033[0;31mExiting...\033[0m\n");
 	exit(1);
 }
