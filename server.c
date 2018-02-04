@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include <unistd.h>
 #include "includes/socket.h"
@@ -11,15 +12,17 @@
 
 void checkError(ResponseCode code);
 void checkDbError(DbCode code);
-void handleNewConnection(Socket_t socket, Db_t db);
-//void handleClientRequests(Socket_t socket);
+void handleNewConnection(Socket_t socket);
+void * newThread(void * data);
+
+Db_t db;
 
 int main(int argc, char * argv[]) {
 	printf("\r Working\n");
 
 	Socket_t socket;
 	ResponseCode resp;
-	Db_t db;
+	//Db_t db;
 	DbCode dbCode;
 
 	/* Create server socket */
@@ -35,8 +38,7 @@ int main(int argc, char * argv[]) {
 		resp = waitForClient(socket);
 		checkError(resp);
 
-		/* Fork process */
-		handleNewConnection(socket, db);
+		handleNewConnection(socket);
 	}
 
 	closeSocket(socket);
@@ -65,57 +67,25 @@ void checkDbError(DbCode code) {
 	exit(1);
 }
 
-void handleNewConnection(Socket_t socket, Db_t db) {
+void handleNewConnection(Socket_t socket) {
+	pthread_t thread;
 
-	printf("*** New connection established ***\n");
-	
-	int childPid = fork();
+	Socket_t newSocket = clientSocket(socket);
 
-	if(childPid == 0) {
-		/* Code for child process */
-
-		handleRequests(socket, db);
-
-		/* End socket */
- 		closeCommunicationSocket(socket);
-
-		printf("*** Connection closed ***\n");
-		exit(0);
-
-	} else {
-		/* Code for parent process */
-
-		/* End socket */
-		closeCommunicationSocket(socket);
+	if(pthread_create(&thread, NULL, newThread, newSocket) == 0) {
+		pthread_detach(thread);
+		printf("*** New connection established ***\n");
 	}
 }
 
-/*
-void handleClientRequests(Socket_t socket) {
+void * newThread(void * data) {
+	Socket_t socket = (Socket_t) data;
 
+	handleRequests(socket, db);
 
+	/* End socket */
+	closeCommunicationSocket(socket);
 
-
-/***** TESTING *****//*
-
-int n;
-char msg[1000] = {0};
-
-while(1)
-   {
-    n=recvMsg(socket,msg,1000);
-    if(n==0)
-    {
-     break;
-    }
-    msg[n]=0;
-    sendMsg(socket,msg,n);
-
-    printf("Receive and set:%s\n",msg);
-   }
-
-/********* END TESTING *************//*
-
-
-	
-}*/
+	printf("*** Connection closed ***\n");
+	return 0;
+}

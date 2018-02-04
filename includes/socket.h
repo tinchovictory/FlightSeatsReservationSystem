@@ -21,4 +21,6 @@ int recvMsg(Socket_t socket, char * msg, int length);
 
 void closeSocket(Socket_t socket);
 
+Socket_t clientSocket(Socket_t socket);
+
 #endif

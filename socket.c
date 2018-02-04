@@ -234,3 +234,12 @@ ResponseCode connectServer(Socket_t socket) {
 void closeSocket(Socket_t socket) {
 	close(socket->socketFd);
 }
+
+
+
+Socket_t clientSocket(Socket_t socket) {
+	Socket_t clientSock = allocateSocket();
+	clientSock->socketFd = socket->socketFd;
+	clientSock->newSocketFd = socket->newSocketFd;
+	return clientSock;
+}
