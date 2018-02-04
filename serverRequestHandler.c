@@ -95,7 +95,6 @@ TransactionResponse processAddFlight(Db_t db, char * buff) {
 	offset += strlen(buff + offset) + 1;
 	flight->date = buff + offset;
 
-
 	/* Critical zone */
 	dbCode = addFlightDb(db, flight);
 
@@ -164,11 +163,16 @@ TransactionResponse processGetFlights(Socket_t socket, Db_t db) {
 	ListPtr flightsList;
 	ListIteratorPtr flightsIter;
 	FlightObj * flight;
+
 	/* Critical zone */
 	flightsList = getFlightsDb(db);
+
+	if(flightsList == NULL) {
+		return TRANS_ERR;
+	}
+
 	flightsIter = listIterator(flightsList);
 	flight = malloc(sizeof(FlightObj));
-	iteratorGetNext(flightsIter, flight);
 
 	answerRequest(socket, TRANS_BEGIN);
 	while(transWaitNext(socket) && iteratorHasNext(flightsIter)) {

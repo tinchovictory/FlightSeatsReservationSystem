@@ -72,9 +72,9 @@ DbCode addFlightDb(Db_t db, FlightObj * flight) {
 	sqlite3_free(sql);
     if (resp != SQLITE_OK ) {    
 		sqlite3_close(db->db);
-
 		return DB_INSERTERR;
 	}
+	
 	return DB_OK;
 }
 

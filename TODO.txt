@@ -2,10 +2,18 @@ TODO
 
 Cambiar fork procesos por threads
 Mutex db
-No se agrega el primer vuelo IMPORTANTEEEE!!!
+
 Mejorar errores
 Port y server como parametro
 
 que pasa si me borran el vuelo cuando estoy usando
 
-opciones de cancel
+opciones de cancel:
+	remove reservation cuando te pide el numer de vuelo
+	manage flights
+	flight status
+	reservtions
+
+
+remove reservation: check que hay vuelos
+manage flights: check que hay vuelos
