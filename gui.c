@@ -6,12 +6,9 @@
 #include "includes/stringUtils.h"
 #include "includes/list.h"
 #include "includes/dbObj.h"
+#include "includes/guiUtils.h"
 
-#define STRINGMAXLENGTH 50
 #define ROWQUANTITY 3
-#define DATE_LENGHT 11
-
-typedef enum {SEAT_OK, SEAT_TAKEN, FULL_FLIGHT, SEAT_NOT_FOUND, FLIGHT_NOT_FOUND} CheckSeatResp;
 
 void flow();
 void printMenu();
@@ -20,24 +17,14 @@ void manageflights();
 void makeReservation();
 void manageReservations();
 void removeReservation();
-int flightsLoaded();
 void printFlights();
 void printFlightInfo(int flightNo);
-FlightObj * getFlightObj(int flightNo);
 void printDAV(int flightNo);
-char * readString(char * buff, int buffSize);
-int readInt();
-char * readAndCpyStr();
-char * readDate();
-int readIntHelp();
-int isValidDate(int day, int month, int year);
-void clearBuff();
-int checkFlight(int flightNo);
-CheckSeatResp checkSeat(int flightNo, int seat);
 int printSeatError(int seatResp);
 int printReservations(int flightNo);
 void printAllReservations(int flightNo);
-int checkReservation(int flightNo, int reservNo);
+int readValidFlight();
+int readValidReservation(int flightNo);
 
 static Socket_t  generalSocket;
 
@@ -89,23 +76,15 @@ void printMenu() {
 void flightStatus() {
 	int input;
 
-	if(!flightsLoaded()) {
+	if(!flightsLoaded(generalSocket)) {
 		printf("\n\033[0;31mThere are no flights loaded yet.\n\033[0m");
 		return;
 	}
 	
-	printf("\n\033[0;32mPlease enter the flight number or 'help' for getting the flights list.\n\033[0m");
-	input = readIntHelp();
+	printFlights();
+	printf("\n\033[0;32mPlease enter the flight number.\n\033[0m");
+	input = readValidFlight();
 	
-	/* Help section */
-	if(input == -1){
-
-		printFlights();
-
-		printf("\n\n\033[0;32mPlease enter the flight number.\n\033[0m");
-		input = readInt();
-	}
-
 	printFlightInfo(input);
 
 	printDAV(input);
@@ -114,13 +93,23 @@ void flightStatus() {
 /* Handle add and remove flights */
 void manageflights() {
 	char c;
-	int selectedMenu, flightNo;
+	int selectedMenu, flightNo, flightsLoad;
 	FlightObj * flight;
 	char buff[STRINGMAXLENGTH] = {0};
 
+	flightsLoad = flightsLoaded(generalSocket);
+
 	do {
-		printf("\n\033[0;32m (1) Add\n (2) Remove\n\033[0m");	
-	} while((selectedMenu = readInt()) != 1 && selectedMenu != 2);
+		printf("\n\033[0;32m (1) Add\n\033[0m");
+		if(flightsLoad) {
+			printf("\033[0;32m (2) Remove\n\033[0m");
+		}
+		printf("\033[0;32m (3) Cancel\n\033[0m");
+	} while((selectedMenu = readInt()) != 1 && (selectedMenu != 2 || !flightsLoad) && selectedMenu != 3);
+
+	if(selectedMenu == 3) {
+		return;
+	}
 	
 	if(selectedMenu == 1) {
 		/* Add flight */
@@ -128,7 +117,7 @@ void manageflights() {
 
 		printf("\n\033[0;32mInsert flight number\n\033[0m");
 		flight->flightNo = readInt();
-		while(checkFlight(flight->flightNo)) {
+		while(checkFlight(generalSocket, flight->flightNo)) {
 			printf("\n\033[0;31mFlight %d alredy exist, please insert an other flight number.\n\033[0m", flight->flightNo);
 			flight->flightNo = readInt();
 		}
@@ -158,8 +147,11 @@ void manageflights() {
 
 	} else {
 		/* Remove flight */
+		printFlights();
+
 		printf("\n\033[0;32mPlease enter the flight number.\n\033[0m");
-		flightNo = readInt();
+		flightNo = readValidFlight();
+
 		printFlightInfo(flightNo);
 		deleteFlight(generalSocket, flightNo);
 		printf("\n\033[0;32mDone\n\033[0m");
@@ -171,22 +163,16 @@ void makeReservation() {
 	ReservationObj * reserv;
 	int seatResp, done = 0;
 
-	if(!flightsLoaded()) {
+	if(!flightsLoaded(generalSocket)) {
 		printf("\n\033[0;31mThere are no flights loaded yet.\n\033[0m");
 		return;
 	}
 
 	reserv = malloc(sizeof(ReservationObj));
 
-	printf("\n\033[0;32mList of available flights:\n\033[0m");
 	printFlights();
 	printf("\n\033[0;32mPlease select a flight.\n\033[0m");
-	reserv->flightNo = readInt();
-	/* Validate FlightNo */
-	while(!checkFlight(reserv->flightNo)) {
-		printf("\n\033[0;31mInvalid flight number, please try again.\n\033[0m");
-		reserv->flightNo = readInt();
-	}
+	reserv->flightNo = readValidFlight();
 
 	printf("\n\033[0;32mEnter name.\n\033[0m");
 	reserv->name = readAndCpyStr();
@@ -198,7 +184,7 @@ void makeReservation() {
 		reserv->seat = readInt();
 
 		/* Validate seat */
-		while((seatResp = checkSeat(reserv->flightNo, reserv->seat)) != SEAT_OK) {
+		while((seatResp = checkSeat(generalSocket, reserv->flightNo, reserv->seat)) != SEAT_OK) {
 			if(seatResp == SEAT_TAKEN) {
 				printDAV(reserv->flightNo);
 			}
@@ -217,7 +203,7 @@ void makeReservation() {
 			done = 1;
 		} else {
 			/* Fail, check common error: seat taken */
-			seatResp = checkSeat(reserv->flightNo, reserv->seat);
+			seatResp = checkSeat(generalSocket, reserv->flightNo, reserv->seat);
 			if(printSeatError(seatResp)) {
 				/* Fatal error, abort */
 				printf("\n\033[0;31mFailed to add.\n\033[0m");
@@ -235,36 +221,24 @@ void makeReservation() {
 
 
 void removeReservation() {
-	int selectedMenu, reservNo, flightNo;
-	
+	int reservNo, flightNo;
 
-	do {
-		printf("\n\033[0;32mDo you know your reservation number?\n- (1) Yes\n- (2) No\n- (3) Cancel\n\033[0m");	
-	} while((selectedMenu = readInt()) != 1 && selectedMenu != 2 && selectedMenu != 3);
-
-	if(selectedMenu == 3) {
+	if(!flightsLoaded(generalSocket)) {
+		printf("\n\033[0;31mThere are no flights loaded yet.\n\033[0m");
 		return;
 	}
 
-	if(selectedMenu == 2) {
-		printf("\033[0;32mEnter your Flight Number\n\033[0m");
-		flightNo = readInt();
-		/* Validate FlightNo */
-		while(!checkFlight(flightNo)) {
-			printf("\n\033[0;31mInvalid flight number, please try again.\n\033[0m");
-			flightNo = readInt();
-		}
-		if(printReservations(flightNo)) {
-			return;
-		}
+	printFlights();
+	printf("\n\033[0;32mEnter your Flight Number\n\033[0m");
+	flightNo = readValidFlight();
+
+	printf("\n\033[0;32mList of reservations:\n\033[0m");
+	if(printReservations(flightNo)) {
+		return;
 	}
 
-	printf("\033[0;32mPlease enter the reservation number.\n\033[0m");
-	reservNo = readInt();
-	while(!checkReservation(flightNo, reservNo)) {
-		printf("\n\033[0;31mInvalid reservation number, please try again.\n\033[0m");
-		reservNo = readInt();
-	}
+	printf("\n\033[0;32mPlease enter the reservation number.\n\033[0m");
+	reservNo = readValidReservation(flightNo);
 
 	cancelReservation(generalSocket, reservNo);
 	printf("\n\033[0;32mDone\n\033[0m");
@@ -274,33 +248,16 @@ void removeReservation() {
 
 void manageReservations() {
 	int flightNo;
+
+	if(!flightsLoaded(generalSocket)) {
+		printf("\n\033[0;31mThere are no flights loaded yet.\n\033[0m");
+		return;
+	}
+
+	printFlights();
 	printf("\n\033[0;32mEnter your flight number\033[0m\n");
-	flightNo = readInt();
-	/* Validate FlightNo */
-	while(!checkFlight(flightNo)) {
-		printf("\n\033[0;31mInvalid flight number, please try again.\n\033[0m");
-		flightNo = readInt();
-	}
+	flightNo = readValidFlight();
 	printAllReservations(flightNo);
-}
-
-/* Check if there are any flights loaded in the db */
-int flightsLoaded() {
-	ListPtr list = getFlights(generalSocket);
-	ListIteratorPtr iter;
-
-	if(list == NULL) {
-		return 0;
-	}
-
-	iter = listIterator(list);
-	if(!iteratorHasNext(iter)) {
-		freeList(list);
-		return 0;
-	}
-	freeIterator(iter);
-	freeList(list);
-	return 1;
 }
 
 
@@ -316,8 +273,14 @@ void printFlights() {
 		return;
 	}
 
-	flight = malloc(sizeof(FlightObj));
 	iter = listIterator(list);
+	if(!iteratorHasNext(iter)) {
+		printf("\033[0;31mThere are no flights loaded.\n\033[0m");
+		return;
+	}
+	flight = malloc(sizeof(FlightObj));
+
+	printf("\n\033[0;32mList of available flights:\n\033[0m");
 
 	printf("\n\033[01;33mFlight No. | Departure -> Arrival | Date\n\033[0m");
 	while(iteratorHasNext(iter)) {
@@ -332,7 +295,7 @@ void printFlights() {
 
 
 void printFlightInfo(int flightNo) {
-	FlightObj * flight = getFlightObj(flightNo);
+	FlightObj * flight = getFlightObj(generalSocket, flightNo);
 
 	if(flight == NULL) {
 		printf("\033[0;31mFlight %d doesn't exist.\n\033[0m", flightNo);
@@ -342,95 +305,7 @@ void printFlightInfo(int flightNo) {
 	free(flight);
 }
 
-FlightObj * getFlightObj(int flightNo) {
-	ListPtr list;
-	ListIteratorPtr iter;
-	FlightObj * flight;
-	int done = 0;
 
-	list = getFlights(generalSocket);
-	if(list == NULL) {
-		return NULL;
-	}
-
-	iter = listIterator(list);
-	flight = malloc(sizeof(FlightObj));
-
-	while(!done && iteratorHasNext(iter)) {
-		iteratorGetNext(iter, flight);
-		if(flight->flightNo == flightNo) {
-			done = 1;
-		}
-	}
-
-	freeIterator(iter);
-	freeList(list);
-
-	if(!done) {
-		free(flight);
-		return NULL;
-	}
-	return flight;
-}
-
-int checkFlight(int flightNo) {
-	FlightObj * flight = getFlightObj(flightNo);
-	if(flight == NULL) {
-		return 0;
-	}
-	free(flight);
-	return 1;
-}
-
-CheckSeatResp checkSeat(int flightNo, int seat) {
-	ListPtr seatsList;
-	ListIteratorPtr iter;
-	FlightSeatObj * seatObj;
-	FlightObj * flightData;
-	int done = 0, count = 0;
-
-	if(seat <= 0) {
-		return SEAT_NOT_FOUND;
-	}
-
-	flightData = getFlightObj(flightNo);
-	if(flightData == NULL) {
-		return FLIGHT_NOT_FOUND;
-	}
-
-	if(flightData->seats < seat) {
-		return SEAT_NOT_FOUND;
-	}
-
-	seatsList = getSeats(generalSocket, flightNo);
-	if(seatsList == NULL) {
-		return FLIGHT_NOT_FOUND;
-	}
-	iter = listIterator(seatsList);
-	seatObj = malloc(sizeof(FlightSeatObj));
-
-	while(iteratorHasNext(iter)) {
-		iteratorGetNext(iter, seatObj);
-		if(seatObj->seat == seat) {
-			done = 1;
-		}
-		count++;
-	}
-
-	free(seatObj);
-	freeIterator(iter);
-	freeList(seatsList);
-
-	if(count == flightData->seats) {
-		free(flightData);
-		return FULL_FLIGHT;
-	}
-	free(flightData);
-	if(done) {
-		return SEAT_TAKEN;
-	}
-	return SEAT_OK;
-}
 
 void printDAV(int flightNo) {
 	ListPtr seatsList;
@@ -439,7 +314,7 @@ void printDAV(int flightNo) {
 	FlightObj * flightData;
 	int i, seatAdded = 1;
 
-	flightData = getFlightObj(flightNo);
+	flightData = getFlightObj(generalSocket, flightNo);
 	if(flightData == NULL) {
 		return;
 	}
@@ -481,118 +356,6 @@ void printDAV(int flightNo) {
 }
 
 
-char * readString(char * buff, int buffSize) {
-	int i = 0;
-	char c;
-
-	memset(buff, 0, buffSize);
-	while(i < buffSize && (c = getchar()) != '\n') {
-		buff[i] = c;
-		i++;
-	}
-
-	if(i == buffSize) {
-		clearBuff();
-	}
-	
-	return buff;
-}
-
-int readInt() {
-	char buff[STRINGMAXLENGTH] = {0};
-	int done = 0, resp = 0;
-
-	while(!done) {
-		readString(buff, STRINGMAXLENGTH - 1);
-		done = sscanf(buff, "%d", &resp);
-		if(!done) {
-			printf("\033[0;31m%s is not a number... Try again!\n\033[0m", buff);
-		}
-	}
-
-	return resp;
-}
-
-char * readAndCpyStr() {
-	char buff[STRINGMAXLENGTH] = {0};
-	char * resp;
-
-	readString(buff, STRINGMAXLENGTH -1);
-	resp = calloc(strlen(buff) + 1, sizeof(char));
-	strcpy(resp, buff);
-
-	return resp;
-}
-
-char * readDate() {
-	char buff[STRINGMAXLENGTH] = {0};
-	char * resp;
-	int done = 0, day, month, year;
-
-	while(!done) {
-		readString(buff, STRINGMAXLENGTH - 1);
-		done = sscanf(buff, "%d/%d/%d", &day, &month, &year);
-
-		if(done) {
-			done = isValidDate(day, month, year);
-		}
-
-		if(!done ) {
-			printf("\033[0;31m%s is not a valid date... Try again!\n\033[0m", buff);
-		}
-	}
-
-	resp = calloc(DATE_LENGHT, sizeof(char));
-	sprintf(resp, "%s%d/%s%d/%d", day < 10 ? "0" : "", day, month < 10 ? "0" : "", month, year);
-	return resp;
-}
-
-int readIntHelp() {
-	char buff[STRINGMAXLENGTH] = {0};
-	int done = 0, resp = 0;
-
-	while(!done) {
-		readString(buff, STRINGMAXLENGTH - 1);
-		if(strcmp(buff, "help") == 0) {
-			done = 1;
-			resp = -1;
-		} else {
-			done = sscanf(buff, "%d", &resp);	
-		}
-		if(!done) {
-			printf("\033[0;31m%s is not a number... Try again or press Help!\n\033[0m", buff);
-		}
-	}
-	return resp;
-}
-
-int isValidDate(int day, int month, int year) {
-	if(year < 2018 || year > 2030) {
-		return 0;
-	}
-	if(month < 1 || month > 12) {
-		return 0;
-	}
-	if(day < 1 || day > 31) {
-		return 0;
-	}
-	if(month == 2 && day > 29) {
-		return 0;
-	}
-	if(month == 2 && day > 28 && !(year % 400 == 0 || (year % 4 == 0 && year % 100 != 0))) {
-		return 0;
-	}
-	if(day > 30 && (month == 4 || month == 6 || month == 9 || month == 11)) {
-		return 0;
-	}
-	return 1;
-}
-
-
-void clearBuff() {
-	char c;
-	while((c = getchar()) != '\n' && c != EOF);
-}
 
 
 int printSeatError(int seatResp) {
@@ -608,6 +371,9 @@ int printSeatError(int seatResp) {
 			return 1;
 		case FLIGHT_NOT_FOUND:
 			printf("\n\033[0;31mSorry, the flight is not available any more.\n\033[0m");
+			return 1;
+		default:
+			printf("\n\033[0;31mUnknown error.\n\033[0m");
 			return 1;
 	}
 	return 0;
@@ -626,6 +392,12 @@ int printReservations(int flightNo) {
 	}
 
 	iter = listIterator(list);
+
+	if(!iteratorHasNext(iter)) {
+		printf("\033[0;31mThere are no reservations for flight %d\n\033[0m", flightNo);
+		return 1;
+	}
+
 	reserv = malloc(sizeof(ReservationObj));
 
 	printf("\n\033[01;33mReservation No. | Name | State | Seat\n\033[0m");
@@ -677,34 +449,20 @@ void printAllReservations(int flightNo) {
 	freeList(list);
 }
 
-
-int checkReservation(int flightNo, int reservNo) {
-	ListPtr list;
-	ListIteratorPtr iter;
-	ReservationObj * reserv;
-	int done = 0;
-
-	list = getReservations(generalSocket, flightNo);
-	if(list == NULL) {
-		return 0;
+int readValidFlight() {
+	int input = readInt();
+	while(!checkFlight(generalSocket, input)) {
+		printf("\n\033[0;31mInvalid flight number, please try again.\n\033[0m");
+		input = readInt();
 	}
+	return input;
+}
 
-	iter = listIterator(list);
-	reserv = malloc(sizeof(ReservationObj));
-
-	while(!done && iteratorHasNext(iter)) {
-		iteratorGetNext(iter, reserv);
-		if(reserv->reservationNo == reservNo) {
-			done = 1;
-		}
+int readValidReservation(int flightNo) {
+	int reservNo = readInt();
+	while(!checkReservation(generalSocket, flightNo, reservNo)) {
+		printf("\n\033[0;31mInvalid reservation number, please try again.\n\033[0m");
+		reservNo = readInt();
 	}
-
-	free(reserv);
-	freeIterator(iter);
-	freeList(list);
-	
-	if(!done) {
-		return 0;		
-	}
-	return 1;
+	return reservNo;
 }

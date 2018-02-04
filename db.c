@@ -11,9 +11,9 @@ typedef struct Db {
 } Db;
 
 
-int checkFlightNo(Db_t db, int flightNo);
-int checkSeat(Db_t db, int flightNo, int seat);
-DbCode insertReservation(Db_t db, ReservationObj * reserv);
+int checkFlightNoDb(Db_t db, int flightNo);
+int checkSeatDb(Db_t db, int flightNo, int seat);
+DbCode insertReservationDb(Db_t db, ReservationObj * reserv);
 
 
 
@@ -126,7 +126,7 @@ int checkSeatDb(Db_t db, int flightNo, int seat) {
 	sqlite3_stmt * res;
 	int resp;
 
-	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = %d AND Seat = %d;", flightNo, seat);
+	char * sql = sqlite3_mprintf("SELECT * FROM Reservations WHERE FlightNo = %d AND Seat = %d AND State = 'Active';", flightNo, seat);
 
 	resp = sqlite3_prepare_v2(db->db, sql, -1, &res, 0);
 

@@ -1,16 +1,13 @@
 TODO
 
-Mejorar errores
-
 opciones de cancel:
+	make reservation
 	remove reservation cuando te pide el numero de vuelo
 	manage flights
 	flight status
 	reservtions
 
-remove reservation: check que hay vuelos
-manage flights: check que hay vuelos
-
 tablas lindas
 
 server info?
+
