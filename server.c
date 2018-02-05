@@ -7,6 +7,7 @@
 #include "includes/db.h"
 #include "includes/serverRequestHandler.h"
 #include "includes/dbSincronization.h"
+#include "includes/serverUi.h"
 
 #define TRUE 1
 
@@ -35,6 +36,9 @@ int main(int argc, char * argv[]) {
 
 	/* Initialize sincro */
 	sincroInit();
+
+	/* Ui init */
+	uiInit();
 
 	/* Wait for new client */
 	while(TRUE) {
@@ -91,6 +95,7 @@ void handleNewConnection(Socket_t socket) {
 		pthread_detach(thread);
 		printf("\033[0;32m*** New connection established ***\033[0m\n");
 	}
+	addUser();
 }
 
 void * newThread(void * data) {
@@ -102,6 +107,7 @@ void * newThread(void * data) {
 	closeCommunicationSocket(socket);
 
 	printf("\033[0;32m*** Connection closed ***\033[0m\n");
+	removeUser();
 	return 0;
 }
 
