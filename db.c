@@ -59,9 +59,43 @@ DbCode installDb(Db_t db) {
 		return DB_INSTALLERR;
 	}
 
+	//Initialize Flights
+	int contInic = 0;
+	char from[5][10] = {"Bs As", "Miami", "Cordoba", "Iguazu", "Chile"},to[5][10] = {"Madrid" ,"Venecia", "Orlando", "Los Andes", "Brazil"}, date[5][11] = {"12/12/2018", "14/11/2018", "15/03/2018", "07/08/2018", "24/05/18"};
+	int price[5] = {100, 200, 300, 400, 500}, seats[5] = {35, 304, 123, 122, 643};
+	while(contInic<5){
+		char *sql2 = sqlite3_mprintf("INSERT INTO Flights VALUES(%d, '%q', '%q', %d, %d, '%q');",contInic++ ,from[contInic], to[contInic], price[contInic], seats[contInic], date[contInic] );
+		resp = sqlite3_exec(db->db, sql2, 0, 0, &errMsg);
+	    
+	    if (resp != SQLITE_OK ) {        
+			printf("SQL error2: %s\n", errMsg);
+			sqlite3_free(errMsg);
+			sqlite3_close(db->db);
+
+			return DB_INSTALLERR;
+		}
+	}
+
+	//Initialize Reservations
+	contInic = 0;
+	char name[5][10] = {"juan", "pedro", "luis", "jose", "ariel"};
+	int flightNo[5] = {0,0,0,1,3}, seat[5] = {2, 1, 13, 25, 43};
+	while(contInic<5){
+		char *sql2 = sqlite3_mprintf("INSERT INTO Reservations VALUES(%d, %d, '%q', '%q', %d);",contInic++ ,flightNo[contInic], name[contInic], "Active", seat[contInic]);
+		resp = sqlite3_exec(db->db, sql2, 0, 0, &errMsg);
+	    
+	    if (resp != SQLITE_OK ) {        
+			printf("SQL error2: %s\n", errMsg);
+			sqlite3_free(errMsg);
+			sqlite3_close(db->db);
+
+			return DB_INSTALLERR;
+		}
+	}
+
+
 	return DB_OK;
 }
-
 
 DbCode addFlightDb(Db_t db, FlightObj * flight) {
 	int resp;

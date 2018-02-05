@@ -15,6 +15,7 @@ void checkError(ResponseCode code);
 void checkDbError(DbCode code);
 void handleNewConnection(Socket_t socket);
 void * newThread(void * data);
+int validateParameters(int argc, char * argv[]);
 
 Db_t db;
 
