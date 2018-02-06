@@ -84,7 +84,7 @@ void flightStatus() {
 	}
 	
 	printFlights();
-	printf("\n\033[0;32mPlease enter the flight number.\n\033[0m");
+	printf("\n\033[0;32mPlease enter the flight number or 'quit'.\n\033[0m");
 	input = readValidFlight();
 	if(input == -1) {
 		return;
@@ -120,14 +120,14 @@ void manageflights() {
 		/* Add flight */
 		flight = malloc(sizeof(FlightObj));
 
-		printf("\n\033[0;32mInsert flight number\n\033[0m");
+		printf("\n\033[0;32mInsert flight number or 'quit'\n\033[0m");
 		flight->flightNo = readInt();
 		if(flight->flightNo == -1) {
 			free(flight);
 			return;
 		}
 		while(checkFlight(generalSocket, flight->flightNo)) {
-			printf("\n\033[0;31mFlight %d alredy exist, please insert an other flight number.\n\033[0m", flight->flightNo);
+			printf("\n\033[0;31mFlight %d alredy exist, please insert an other flight number or 'quit'.\n\033[0m", flight->flightNo);
 			flight->flightNo = readInt();
 			if(flight->flightNo == -1) {
 				free(flight);
@@ -135,35 +135,35 @@ void manageflights() {
 			}
 		}
 
-		printf("\n\033[0;32mInsert departure\n\033[0m");
+		printf("\n\033[0;32mInsert departure or 'quit'\n\033[0m");
 		flight->departure = readAndCpyStr();
 		if(flight->departure == NULL) {
 			free(flight);
 			return;
 		}
 
-		printf("\n\033[0;32mInsert arrival\n\033[0m");
+		printf("\n\033[0;32mInsert arrival or 'quit'\n\033[0m");
 		flight->arrival = readAndCpyStr();
 		if(flight->arrival == NULL) {
 			free(flight);
 			return;
 		}
 
-		printf("\n\033[0;32mInsert price\n\033[0m");
+		printf("\n\033[0;32mInsert price or 'quit'\n\033[0m");
 		flight->price = readInt();
 		if(flight->price == -1) {
 			free(flight);
 			return;
 		}
 
-		printf("\n\033[0;32mInsert seats\n\033[0m");
+		printf("\n\033[0;32mInsert seats or 'quit'\n\033[0m");
 		flight->seats = readValidSeatsNo();
 		if(flight->seats == -1) {
 			free(flight);
 			return;
 		}
 
-		printf("\n\033[0;32mInsert date (dd/mm/yyyy)\n\033[0m");
+		printf("\n\033[0;32mInsert date (dd/mm/yyyy) or 'quit'\n\033[0m");
 		flight->date = readDate();
 		if(flight->date == NULL) {
 			free(flight);
@@ -182,7 +182,7 @@ void manageflights() {
 		/* Remove flight */
 		printFlights();
 
-		printf("\n\033[0;32mPlease enter the flight number.\n\033[0m");
+		printf("\n\033[0;32mPlease enter the flight number or 'quit'.\n\033[0m");
 		flightNo = readValidFlight();
 		if(flightNo == -1) {
 			return;
@@ -207,14 +207,14 @@ void makeReservation() {
 	reserv = malloc(sizeof(ReservationObj));
 
 	printFlights();
-	printf("\n\033[0;32mPlease select a flight.\n\033[0m");
+	printf("\n\033[0;32mPlease select a flight or 'quit'.\n\033[0m");
 	reserv->flightNo = readValidFlight();
 	if(reserv->flightNo == -1) {
 		free(reserv);
 		return;
 	}
 
-	printf("\n\033[0;32mEnter name.\n\033[0m");
+	printf("\n\033[0;32mEnter name or 'quit'.\n\033[0m");
 	reserv->name = readAndCpyStr();
 	if(reserv->name == NULL) {
 		free(reserv);
@@ -224,7 +224,7 @@ void makeReservation() {
 	/* Most common error is taken seat, prevent it */
 	do {
 		printDAV(reserv->flightNo);
-		printf("\n\033[0;32mEnter seat.\n\033[0m");
+		printf("\n\033[0;32mEnter seat or 'quit'.\n\033[0m");
 		reserv->seat = readInt();
 		if(reserv->seat == -1) {
 			free(reserv);
@@ -281,24 +281,33 @@ void removeReservation() {
 	}
 
 	printFlights();
-	printf("\n\033[0;32mEnter your Flight Number\n\033[0m");
+	printf("\n\033[0;32mEnter your Flight Number or 'quit'\n\033[0m");
 	flightNo = readValidFlight();
 	if(flightNo == -1) {
 		return;
 	}
 
-	printf("\n\033[0;32mList of reservations:\n\033[0m");
+	printFlightInfo(flightNo);
+
+	printDAV(flightNo);
+
+	printf("\n\033[1;35mList of reservations:\n\033[0m");
 	if(printReservations(flightNo)) {
 		return;
 	}
 
-	printf("\n\033[0;32mPlease enter the reservation number.\n\033[0m");
+	printf("\n\033[0;32mPlease enter the reservation number or 'quit'.\n\033[0m");
 	reservNo = readValidReservation(flightNo);
 	if(reservNo == -1) {
 		return;
 	}
 
 	cancelReservation(generalSocket, reservNo);
+
+	printFlightInfo(flightNo);
+
+	printDAV(flightNo);
+
 	printf("\n\033[0;32mDone\n\033[0m");
 
 }
@@ -313,7 +322,7 @@ void manageReservations() {
 	}
 
 	printFlights();
-	printf("\n\033[0;32mEnter your flight number\033[0m\n");
+	printf("\n\033[0;32mEnter your flight number or 'quit'\033[0m\n");
 	flightNo = readValidFlight();
 	if(flightNo == -1) {
 		return;
